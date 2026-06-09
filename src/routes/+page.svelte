@@ -1,0 +1,103 @@
+<script lang="ts">
+	let { data } = $props();
+
+	let now = $state(Date.now());
+	$effect(() => {
+		const t = setInterval(() => (now = Date.now()), 1000);
+		return () => clearInterval(t);
+	});
+
+	const remaining = $derived(new Date(data.auctionClose).getTime() - now);
+
+	function countdown(ms: number): string {
+		if (ms <= 0) return 'Hammer down';
+		const s = Math.floor(ms / 1000);
+		const d = Math.floor(s / 86400);
+		const h = Math.floor((s % 86400) / 3600);
+		const m = Math.floor((s % 3600) / 60);
+		const sec = s % 60;
+		return `${d}d ${h}h ${m}m ${sec}s`;
+	}
+</script>
+
+<h1>The World Cup, going once…</h1>
+
+{#if data.user}
+	<div class="panel countdown">
+		{#if data.auctionOpen}
+			<span class="muted">Auction closes in</span>
+			<strong>{countdown(remaining)}</strong>
+			<span class="muted">— one hour before the first kickoff. {data.unsoldCount} of {data.teamCount} lots still without a bid.</span>
+		{:else}
+			<strong>The hammer has fallen.</strong>
+			<span class="muted">Scores now follow the tournament. Good luck.</span>
+		{/if}
+	</div>
+
+	<h2>Your lots</h2>
+	{#if data.mine.length === 0}
+		<p class="muted">
+			You hold no high bids. Browse <a href="/teams">the sale</a> before the hammer falls.
+		</p>
+	{:else}
+		<table>
+			<thead>
+				<tr><th>Team</th><th class="num">Your bid</th></tr>
+			</thead>
+			<tbody>
+				{#each data.mine as t (t.id)}
+					<tr>
+						<td><a href="/teams/{t.id}">{t.flag} {t.name}</a></td>
+						<td class="num bonbons">{t.high_bid}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	{/if}
+
+	{#if data.hot.length > 0}
+		<h2>Most contested lots</h2>
+		<table>
+			<thead>
+				<tr><th>Team</th><th class="num">Bids</th><th class="num">High bid</th><th>Held by</th></tr>
+			</thead>
+			<tbody>
+				{#each data.hot as t (t.id)}
+					<tr>
+						<td><a href="/teams/{t.id}">{t.flag} {t.name}</a></td>
+						<td class="num">{t.bid_count}</td>
+						<td class="num bonbons">{t.high_bid}</td>
+						<td>{t.high_bidder_name}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	{/if}
+{:else}
+	<p>
+		Forty-eight national teams go under the hammer, payable in BonBons. Bid wisely: glory is
+		measured not by what your teams win, but by what they win <em>per BonBon paid</em>. Overpay
+		for Brazil and you will be beaten by whoever picked up Curaçao for loose change.
+	</p>
+	<p>
+		<a class="button" href="/register">Register with your bonhams.com address</a>
+		&nbsp; or <a href="/login">sign in</a>.
+	</p>
+	<p class="muted">The auction closes one hour before kickoff of the first match.</p>
+{/if}
+
+<style>
+	.countdown {
+		display: flex;
+		gap: 0.75rem;
+		align-items: baseline;
+		flex-wrap: wrap;
+	}
+
+	.countdown strong {
+		font-family: var(--serif);
+		font-size: 1.6rem;
+		color: var(--yellow);
+		font-variant-numeric: tabular-nums;
+	}
+</style>

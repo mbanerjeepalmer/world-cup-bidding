@@ -1,0 +1,191 @@
+/* Auction-house theme: near-black canvas, yellow accents, serif display type. */
+:root {
+	--black: #0d0d0d;
+	--panel: #161616;
+	--panel-raised: #1f1f1f;
+	--border: #2c2c2c;
+	--yellow: #ffd400;
+	--yellow-dim: #c7a600;
+	--text: #f2f0eb;
+	--text-muted: #9a968c;
+	--danger: #ff5c5c;
+	--green: #5cd97c;
+	--serif: 'Didot', 'Bodoni MT', 'Playfair Display', 'Georgia', serif;
+	--sans: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background: var(--black);
+	color: var(--text);
+	font-family: var(--sans);
+	font-size: 16px;
+	line-height: 1.55;
+	-webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+	font-family: var(--serif);
+	font-weight: 500;
+	letter-spacing: 0.01em;
+	line-height: 1.2;
+}
+
+h1 {
+	font-size: 2.2rem;
+	margin: 0 0 0.5rem;
+}
+
+h2 {
+	font-size: 1.4rem;
+	margin: 2rem 0 0.75rem;
+}
+
+a {
+	color: var(--yellow);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+main {
+	max-width: 960px;
+	margin: 0 auto;
+	padding: 2rem 1.25rem 4rem;
+}
+
+.muted {
+	color: var(--text-muted);
+}
+
+.panel {
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 1.25rem 1.5rem;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+th,
+td {
+	text-align: left;
+	padding: 0.6rem 0.75rem;
+	border-bottom: 1px solid var(--border);
+}
+
+th {
+	font-family: var(--sans);
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--text-muted);
+	font-weight: 600;
+}
+
+tr:hover td {
+	background: var(--panel);
+}
+
+td.num,
+th.num {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+input,
+select {
+	background: var(--panel-raised);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	color: var(--text);
+	font: inherit;
+	padding: 0.55rem 0.75rem;
+	width: 100%;
+}
+
+input:focus,
+select:focus {
+	outline: none;
+	border-color: var(--yellow);
+}
+
+label {
+	display: block;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text-muted);
+	margin: 1rem 0 0.35rem;
+}
+
+button,
+.button {
+	display: inline-block;
+	background: var(--yellow);
+	color: var(--black);
+	border: none;
+	border-radius: 4px;
+	font: inherit;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+	padding: 0.6rem 1.4rem;
+	cursor: pointer;
+}
+
+button:hover,
+.button:hover {
+	background: var(--yellow-dim);
+	text-decoration: none;
+}
+
+button.subtle {
+	background: transparent;
+	color: var(--yellow);
+	border: 1px solid var(--yellow);
+}
+
+.error {
+	color: var(--danger);
+	margin: 0.75rem 0;
+}
+
+.success {
+	color: var(--green);
+	margin: 0.75rem 0;
+}
+
+.badge {
+	display: inline-block;
+	font-size: 0.7rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	border-radius: 3px;
+	padding: 0.15rem 0.5rem;
+}
+
+.badge.yellow {
+	background: var(--yellow);
+	color: var(--black);
+}
+
+.badge.outline {
+	border: 1px solid var(--border);
+	color: var(--text-muted);
+}
+
+.bonbons {
+	font-variant-numeric: tabular-nums;
+}
