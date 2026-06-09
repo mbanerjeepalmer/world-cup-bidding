@@ -24,3 +24,10 @@ vite.config.ts.timestamp-*
 
 # Database
 /data/
+
+# Test artifacts
+/.test-data/
+/.e2e-data/
+/test-results/
+/playwright-report/
+/.playwright-mcp/
