@@ -44,14 +44,29 @@ Set `DATABASE_DIR` to control where the SQLite file is stored (defaults to `./da
 
 ### Deploying to Coolify
 
-The repo ships a `Dockerfile`; point Coolify at it (build pack: Dockerfile) and:
+The repo ships a `Dockerfile`. In Coolify:
 
-- mount a persistent volume at `/app/data` so the SQLite file survives deploys
-- set `ORIGIN` to the public URL (e.g. `https://auction.example.com`) —
-  adapter-node rejects form posts without it
-- set `RESEND_API_KEY` (and optionally `EMAIL_FROM`) for sign-in emails
+1. Create a new resource from this Git repository and pick the **Dockerfile**
+   build pack. The container listens on **port 3000**.
+2. Add a **persistent volume** mounted at `/app/data` so the SQLite database
+   survives deploys. Without it every deploy starts a fresh auction (and the
+   first person to register on the new database becomes admin).
+3. Set the environment variables:
+   - `ORIGIN` — the public URL, e.g. `https://auction.example.com`.
+     Required: adapter-node rejects form posts (login, bids) without it.
+   - `RESEND_API_KEY` — for the sign-in emails. Until it's set, magic links
+     are only printed to the container log (Coolify → Logs), which works in a
+     pinch but means signing players in by hand.
+   - `EMAIL_FROM` (optional) — defaults to
+     `BonBon Auction <onboarding@resend.dev>`, which Resend only delivers to
+     the email address that owns the Resend account. For everyone else to
+     receive links, verify a domain in Resend and set something like
+     `BonBon Auction <auction@yourdomain.com>`.
+4. Deploy, open the site, and register — the first account becomes the
+   auctioneer/admin.
 
-The container listens on port 3000.
+Fixtures and results sync from the feed at boot and hourly after that, so no
+scheduled jobs are needed.
 
 ## Notes for the auctioneer
 
