@@ -40,8 +40,13 @@
 	{#if data.user}
 		<div class="bar sub">
 			<span class="muted">
-				{data.user.name} · <span class="bonbons">{data.budget - data.committed}</span> of
-				<span class="bonbons">{data.budget}</span> BonBons free
+				{data.user.name} ·
+				{#if data.held}
+					leading <a href="/teams/{data.held.id}">{data.held.flag} {data.held.name}</a> at
+					<span class="bonbons">{data.held.bid}</span> BonBons
+				{:else}
+					no lot held
+				{/if}
 			</span>
 			<span>
 				{#if data.auctionOpen}

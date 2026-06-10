@@ -23,21 +23,30 @@ test('full journey: register admin, bid, set a result, see points ÷ price', asy
 	// First successful signup → admin.
 	await register(page, 'auctioneer@bonhams.com', 'Auctioneer');
 	await expect(page).toHaveURL('/');
-	await expect(page.getByText('1000 of 1000 BonBons free')).toBeVisible();
+	await expect(page.getByText('no lot held')).toBeVisible();
 	await expect(page.getByRole('link', { name: 'Admin' })).toBeVisible();
 
 	// Place an opening bid on Brazil and confirm the standard increment kicks in.
 	await page.goto('/teams');
 	await page.getByRole('link', { name: /Brazil/ }).click();
+	// Staggered close: each lot displays its own hammer time.
+	await expect(page.getByText('Hammer falls at')).toBeVisible();
 	await expect(page.getByText('Opening bid: 10 BonBons')).toBeVisible();
 	await page.getByRole('button', { name: 'Place bid' }).click();
 	await expect(page.getByText('Bid placed: 10 BonBons.')).toBeVisible();
 	await expect(page.getByText('High bid:')).toBeVisible();
-	// Next minimum is 10 + 5 = 15.
+	// Next minimum is 10 + 5 = 15, and the header now shows the held lot.
 	await expect(page.locator('input[name="amount"]')).toHaveValue('15');
-
-	// Record Brazil as group winner and champion via the admin panel (50 points).
+	await expect(page.getByText(/leading .*Brazil/)).toBeVisible();
 	const brazilUrl = page.url();
+
+	// One team per bidder: every other lot is off limits while leading Brazil.
+	await page.goto('/teams');
+	await page.getByRole('link', { name: /Argentina/ }).click();
+	await expect(page.getByRole('button', { name: 'Place bid' })).toBeDisabled();
+	await expect(page.getByText('One team per bidder')).toBeVisible();
+
+	// Record Brazil as group winner and champion via the admin panel (25 points).
 	await page.goto('/admin/teams');
 	const row = page.getByRole('row', { name: /Brazil/ });
 	await row.locator('select[name="group_position"]').selectOption('1');
@@ -45,11 +54,11 @@ test('full journey: register admin, bid, set a result, see points ÷ price', asy
 	await row.getByRole('button', { name: 'Save' }).click();
 	await expect(row.locator('select[name="exit_stage"]')).toHaveValue('champion');
 
-	// Leaderboard: 50 points for 10 BonBons → 5.000.
+	// Leaderboard: 25 points for 10 BonBons → 2.500.
 	await page.goto('/leaderboard');
 	const boardRow = page.getByRole('row', { name: /Auctioneer/ });
-	await expect(boardRow).toContainText('50');
-	await expect(boardRow).toContainText('5.000');
+	await expect(boardRow).toContainText('25');
+	await expect(boardRow).toContainText('2.500');
 
 	// The lot page now reflects the owner holding the high bid.
 	await page.goto(brazilUrl);
@@ -69,6 +78,29 @@ test('a second bidder can outbid and take the lead', async ({ page }) => {
 	await page.getByRole('button', { name: 'Place bid' }).click();
 	await expect(page.getByText('Bid placed: 15 BonBons.')).toBeVisible();
 	await expect(page.getByText('You hold this lot')).toBeVisible();
+});
+
+test('fixtures come from the feed: groups set, qualifiers in, placeholders out', async ({ page }) => {
+	// Sign back in as the admin (also covers the login flow).
+	await page.goto('/login');
+	await page.fill('input[name="email"]', 'auctioneer@bonhams.com');
+	await page.fill('input[name="password"]', 'password123');
+	await page.click('button[type="submit"]');
+	await expect(page).toHaveURL('/');
+
+	// The startup sync ran against the feed fixture: real qualifiers replace
+	// the seeded play-off placeholders, and groups are assigned.
+	await page.goto('/teams');
+	await expect(page.getByRole('link', { name: /Czech Republic/ })).toBeVisible();
+	await expect(page.getByText('UEFA Play-off Winner A')).toHaveCount(0);
+	await expect(page.getByRole('row', { name: /Brazil/ })).toContainText('C');
+	// The sale shows the staggered running order.
+	await expect(page.getByRole('columnheader', { name: 'Hammer' })).toBeVisible();
+
+	// And the admin can re-sync on demand.
+	await page.goto('/admin');
+	await page.getByRole('button', { name: 'Sync now' }).click();
+	await expect(page.getByText(/Synced 48 teams/)).toBeVisible();
 });
 
 test('a bid below the minimum increment is blocked', async ({ page }) => {

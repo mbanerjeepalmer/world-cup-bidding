@@ -4,9 +4,9 @@
 
 	let { data, form } = $props();
 
-	// Keep the lot fresh while the auction is live — others may be bidding.
+	// Keep the lot fresh while it is live — others may be bidding.
 	$effect(() => {
-		if (!data.auctionOpen) return;
+		if (!data.lotOpen) return;
 		const t = setInterval(() => invalidateAll(), 5000);
 		return () => clearInterval(t);
 	});
@@ -38,26 +38,41 @@
 			<p class="muted">No bids yet. Opening bid: {data.nextBid} BonBons.</p>
 		{/if}
 
-		{#if data.auctionOpen}
+		{#if data.lotOpen}
+			<p class="muted">
+				Hammer falls at <strong>{new Date(data.team.close_at).toLocaleString()}</strong>.
+			</p>
 			{#if form?.error}<p class="error">{form.error}</p>{/if}
 			{#if form?.success}<p class="success">{form.success}</p>{/if}
 			<form method="POST" action="?/bid" use:enhance>
-				<label for="amount">Your bid (min {data.nextBid}, you have {data.available} free)</label>
+				<label for="amount">Your bid (min {data.nextBid} BonBons)</label>
 				<input
 					id="amount"
 					name="amount"
 					type="number"
 					min={data.nextBid}
-					max={data.available}
 					step="1"
 					value={data.nextBid}
 					required
 				/>
-				<p><button type="submit" disabled={youLead}>Place bid</button></p>
-				{#if youLead}<p class="muted">You already hold the high bid.</p>{/if}
+				<p><button type="submit" disabled={youLead || !!data.heldOther}>Place bid</button></p>
+				{#if youLead}
+					<p class="muted">You already hold the high bid.</p>
+				{:else if data.heldOther?.closed}
+					<p class="muted">
+						<a href="/teams/{data.heldOther.id}">{data.heldOther.flag} {data.heldOther.name}</a>
+						is your team for the tournament — the hammer has fallen on it.
+					</p>
+				{:else if data.heldOther}
+					<p class="muted">
+						One team per bidder — you hold
+						<a href="/teams/{data.heldOther.id}">{data.heldOther.flag} {data.heldOther.name}</a>.
+						You can bid here if someone outbids you there.
+					</p>
+				{/if}
 			</form>
 		{:else}
-			<p class="badge outline">Auction closed</p>
+			<p class="badge outline">Hammer down</p>
 			{#if data.team.high_bid}
 				<p class="muted">
 					Sold to {youLead ? 'you' : data.team.high_bidder_name} for

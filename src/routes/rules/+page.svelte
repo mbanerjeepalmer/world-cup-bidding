@@ -7,11 +7,17 @@
 <h2>The auction</h2>
 <ul>
 	<li>Every World Cup team is a lot, sold by open auction in BonBons, our house currency.</li>
-	<li>Each bidder has a budget of <strong class="bonbons">{data.budget} BonBons</strong>. Funds are
-		only committed while you hold the high bid — if you are outbid, they are freed.</li>
-	<li>The auction closes <strong>one hour before kickoff of the first match</strong>
-		({new Date(data.auctionClose).toLocaleString()} your time). Whoever holds the high bid on a
-		lot at that moment owns the team at that price.</li>
+	<li><strong>One team per bidder.</strong> You may hold the high bid on only one lot at a time;
+		being outbid frees you to bid elsewhere.</li>
+	<li>There is no budget — bid whatever you like. But remember the scoring: every BonBon you pay
+		divides your points at the end. Win the lot too dearly and you lose the game.</li>
+	<li>Lots are hammered <strong>one at a time</strong>, in running order — Group A first,
+		alphabetically within each group, {data.staggerMinutes} minutes apart. Each lot's hammer
+		time is shown in the sale.</li>
+	<li>The final lot closes <strong>{data.closeMarginMinutes} minutes before kickoff of the first
+		match</strong> ({new Date(data.auctionClose).toLocaleString()} your time). Whoever holds the
+		high bid when a lot's hammer falls owns that team at that price — and their auction is
+		over.</li>
 	<li>Teams with no bids go unsold and score for nobody.</li>
 </ul>
 
@@ -38,17 +44,17 @@
 	<tbody>
 		<tr><td>4th in group</td><td class="num">0</td></tr>
 		<tr><td>3rd in group</td><td class="num">1</td></tr>
-		<tr><td>2nd in group</td><td class="num">3</td></tr>
-		<tr><td>1st in group</td><td class="num">6</td></tr>
-		<tr><td>Winning a Round-of-32 match</td><td class="num">+4</td></tr>
-		<tr><td>Winning a Round-of-16 match</td><td class="num">+6</td></tr>
-		<tr><td>Winning a quarter-final</td><td class="num">+8</td></tr>
-		<tr><td>Winning a semi-final</td><td class="num">+10</td></tr>
-		<tr><td>Winning the final</td><td class="num">+16</td></tr>
+		<tr><td>2nd in group</td><td class="num">2</td></tr>
+		<tr><td>1st in group</td><td class="num">3</td></tr>
+		<tr><td>Winning a Round-of-32 match</td><td class="num">+2</td></tr>
+		<tr><td>Winning a Round-of-16 match</td><td class="num">+3</td></tr>
+		<tr><td>Winning a quarter-final</td><td class="num">+4</td></tr>
+		<tr><td>Winning a semi-final</td><td class="num">+5</td></tr>
+		<tr><td>Winning the final</td><td class="num">+8</td></tr>
 	</tbody>
 </table>
-<p class="muted">So a team that tops its group and is knocked out immediately scores 6; a team
-	that tops its group and wins the whole thing scores 50.</p>
+<p class="muted">So a team that tops its group and is knocked out immediately scores 3; a team
+	that tops its group and wins the whole thing scores 25.</p>
 
 <h2>Scoring the game</h2>
 <ul>

@@ -1,13 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { placeBid, getTeamWithBid, committed } from '../../src/lib/server/auction';
-import {
-	resetDb,
-	makeUser,
-	makeTeam,
-	openAuction,
-	closeAuction,
-	setBudget
-} from '../helpers';
+import { placeBid, getTeamWithBid, leadingBids } from '../../src/lib/server/auction';
+import { setSetting } from '../../src/lib/server/db';
+import { resetDb, makeUser, makeTeam, openAuction, closeAuction } from '../helpers';
 
 let alice: number;
 let bob: number;
@@ -16,7 +10,6 @@ let brazil: number;
 beforeEach(() => {
 	resetDb();
 	openAuction();
-	setBudget(1000);
 	alice = makeUser('Alice');
 	bob = makeUser('Bob');
 	brazil = makeTeam('Brazil');
@@ -70,38 +63,63 @@ describe('placeBid — validation', () => {
 	});
 });
 
-describe('placeBid — auction close (v1: closes one hour before kickoff)', () => {
-	it('refuses bids once the auction has closed', () => {
+describe('placeBid — staggered hammer (last lot two hours before kickoff)', () => {
+	it('refuses bids once a lot has been hammered', () => {
 		closeAuction();
 		expect(placeBid(brazil, alice, 10)).toEqual({
 			ok: false,
-			error: 'The auction has closed.'
+			error: 'The hammer has fallen on this lot.'
 		});
+	});
+
+	it('closes lots one at a time in running order', () => {
+		// Same group, so Argentina is hammered 5 minutes (the default stagger)
+		// before Brazil. Pick a kickoff that puts us between the two hammers:
+		// the final hammer (Brazil) is 2.5 minutes away, Argentina fell 2.5
+		// minutes ago.
+		const argentina = makeTeam('Argentina');
+		setSetting('kickoff', new Date(Date.now() + 122.5 * 60_000).toISOString());
+
+		expect(placeBid(argentina, alice, 10)).toEqual({
+			ok: false,
+			error: 'The hammer has fallen on this lot.'
+		});
+		expect(placeBid(brazil, alice, 10)).toEqual({ ok: true });
+	});
+
+	it('locks the winner of a hammered lot out of the rest of the sale', () => {
+		const argentina = makeTeam('Argentina');
+		placeBid(argentina, alice, 10); // everything still open
+		// Argentina's hammer falls; Brazil remains open.
+		setSetting('kickoff', new Date(Date.now() + 122.5 * 60_000).toISOString());
+
+		const r = placeBid(brazil, alice, 10);
+		expect(r.ok).toBe(false);
+		expect((r as { error: string }).error).toContain('Argentina is your team');
+		// Bob is still free to fight for Brazil.
+		expect(placeBid(brazil, bob, 10)).toEqual({ ok: true });
 	});
 });
 
-describe('placeBid — budget and committed funds', () => {
-	it('caps total commitments at the budget across multiple lots', () => {
-		setBudget(1000);
+describe('placeBid — one team per bidder', () => {
+	it('refuses a bid on a second lot while leading another', () => {
 		const argentina = makeTeam('Argentina');
-		expect(placeBid(brazil, alice, 600).ok).toBe(true);
-		// Only 400 left; a 500 bid must be refused.
-		const r = placeBid(argentina, alice, 500);
+		expect(placeBid(brazil, alice, 10).ok).toBe(true);
+		const r = placeBid(argentina, alice, 10);
 		expect(r.ok).toBe(false);
-		expect((r as { error: string }).error).toContain('exceeds your available funds');
-		expect(committed(alice)).toBe(600);
+		expect((r as { error: string }).error).toContain('one team per bidder');
+		expect((r as { error: string }).error).toContain('Brazil');
 	});
 
-	it('frees committed funds when a bid is beaten', () => {
-		placeBid(brazil, alice, 600);
-		expect(committed(alice)).toBe(600);
-		// Bob takes the lead; Alice's 600 is no longer committed.
-		placeBid(brazil, bob, 650);
-		expect(committed(alice)).toBe(0);
-		expect(committed(bob)).toBe(650);
+	it('frees the bidder to go elsewhere once outbid', () => {
+		const argentina = makeTeam('Argentina');
+		placeBid(brazil, alice, 10);
+		placeBid(brazil, bob, 15); // Bob takes Brazil from Alice
+		expect(placeBid(argentina, alice, 10)).toEqual({ ok: true });
+		expect(leadingBids(alice).map((t) => t.name)).toEqual(['Argentina']);
 	});
 
-	it('lets a bidder commit right up to the full budget', () => {
-		expect(placeBid(brazil, alice, 1000).ok).toBe(true);
+	it('accepts an arbitrarily large bid — there is no budget, the ratio is the brake', () => {
+		expect(placeBid(brazil, alice, 1_000_000)).toEqual({ ok: true });
 	});
 });

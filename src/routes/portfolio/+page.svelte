@@ -1,18 +1,15 @@
 <script lang="ts">
 	let { data } = $props();
-
-	const spent = $derived(data.leading.reduce((s, t) => s + (t.high_bid ?? 0), 0));
-	const totalScore = $derived(data.leading.reduce((s, t) => s + t.score, 0));
 </script>
 
-<h1>My lots</h1>
+<h1>My lot</h1>
 <p class="muted">
 	{#if data.auctionOpen}
-		High bids you currently hold. If the hammer fell now, these would be yours.
+		One team per bidder — the high bid you currently hold. If the hammer fell now, it would be
+		yours.
 	{:else}
-		Your teams for the tournament.
+		Your team for the tournament.
 	{/if}
-	Committed: <span class="bonbons">{spent}</span> of <span class="bonbons">{data.budget}</span> BonBons.
 </p>
 
 {#if data.leading.length === 0}
@@ -36,12 +33,6 @@
 					<td class="num">{t.score.toFixed(3)}</td>
 				</tr>
 			{/each}
-			<tr>
-				<td><strong>Total</strong></td>
-				<td class="num bonbons"><strong>{spent}</strong></td>
-				<td class="num"><strong>{data.leading.reduce((s, t) => s + t.points, 0)}</strong></td>
-				<td class="num"><strong>{totalScore.toFixed(3)}</strong></td>
-			</tr>
 		</tbody>
 	</table>
 {/if}

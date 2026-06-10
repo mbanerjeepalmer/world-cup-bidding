@@ -1,14 +1,15 @@
 import { db } from './db';
 import { listTeamsWithBids, type TeamWithBid } from './auction';
 
-// Group stage points (groups of four): bottom of the group scores nothing,
-// each place above earns more, topping the group earns 6 — so a team that
-// wins its group and is knocked out immediately finishes on 6 points.
-const GROUP_POINTS: Record<number, number> = { 4: 0, 3: 1, 2: 3, 1: 6 };
+// Group stage points (groups of four), per v1.md: fourth scores nothing,
+// third scores one, and the group winner scores 3 — so a team that wins its
+// group and is knocked out immediately finishes on 3 points.
+const GROUP_POINTS: Record<number, number> = { 4: 0, 3: 1, 2: 2, 1: 3 };
 
-// Each knockout match won adds points on top. A team that tops its group and
-// wins the whole tournament scores 6 + 4 + 6 + 8 + 10 + 16 = 50.
-const KNOCKOUT_WIN_POINTS = { r32: 4, r16: 6, qf: 8, sf: 10, final: 16 };
+// Each knockout match won adds points on top, climbing with the round and a
+// premium for the final itself. A team that tops its group and wins the whole
+// tournament scores 3 + 2 + 3 + 4 + 5 + 8 = 25.
+const KNOCKOUT_WIN_POINTS = { r32: 2, r16: 3, qf: 4, sf: 5, final: 8 };
 
 export const EXIT_STAGES = [
 	{ value: 'r32', label: 'Out in Round of 32' },

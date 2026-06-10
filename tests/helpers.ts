@@ -33,7 +33,3 @@ export function openAuction() {
 export function closeAuction() {
 	setSetting('kickoff', '2000-01-01T00:00:00Z');
 }
-
-export function setBudget(n: number) {
-	setSetting('budget', String(n));
-}

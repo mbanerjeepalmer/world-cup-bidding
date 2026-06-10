@@ -9,8 +9,9 @@
 
 <h1>The Sale</h1>
 <p class="muted">
-	{data.teams.length} lots. Minimum next bid follows standard increments —
-	see <a href="/rules">the rules</a>.
+	{data.teams.length} lots, hammered one at a time in running order — Group A first, the last lot
+	two hours before kickoff. Minimum next bid follows standard increments — see
+	<a href="/rules">the rules</a>.
 </p>
 
 <input type="search" placeholder="Search teams…" bind:value={query} class="search" />
@@ -20,6 +21,7 @@
 		<tr>
 			<th>Lot</th>
 			<th>Group</th>
+			<th>Hammer</th>
 			<th class="num">Bids</th>
 			<th class="num">High bid</th>
 			<th>Held by</th>
@@ -31,6 +33,18 @@
 			<tr>
 				<td><a href="/teams/{t.id}">{t.flag} {t.name}</a></td>
 				<td class="muted">{t.group_name}</td>
+				<td class="muted">
+					{#if new Date(t.close_at) <= new Date()}
+						<span class="badge outline">Hammer down</span>
+					{:else}
+						{new Date(t.close_at).toLocaleString(undefined, {
+							month: 'short',
+							day: 'numeric',
+							hour: '2-digit',
+							minute: '2-digit'
+						})}
+					{/if}
+				</td>
 				<td class="num">{t.bid_count}</td>
 				<td class="num bonbons">{t.high_bid ?? '—'}</td>
 				<td>

@@ -8,13 +8,25 @@
 {#if form?.error}<p class="error">{form.error}</p>{/if}
 {#if form?.success}<p class="success">{form.success}</p>{/if}
 
+<h2>Fixtures & results</h2>
+<p class="muted">
+	Fixtures, results and scores come from the openfootball World Cup feed — synced on every
+	build, at server start and hourly. Edits on the teams page hold only until the next sync.
+</p>
+<form method="POST" action="?/sync">
+	<p><button type="submit">Sync now</button></p>
+</form>
+
 <h2>Settings</h2>
 <form method="POST" action="?/settings" class="panel narrow">
-	<label for="kickoff">First match kickoff (UTC ISO — auction closes one hour before)</label>
+	<label for="kickoff">First match kickoff (UTC ISO — set automatically by the feed sync)</label>
 	<input id="kickoff" name="kickoff" value={data.kickoff} required />
 
-	<label for="budget">Budget per bidder (BonBons)</label>
-	<input id="budget" name="budget" type="number" min="1" value={data.budgetSetting} required />
+	<label for="stagger_minutes">Minutes between hammers (lots close one at a time)</label>
+	<input id="stagger_minutes" name="stagger_minutes" type="number" min="1" value={data.staggerMinutes} required />
+
+	<label for="close_margin_minutes">Final hammer, minutes before kickoff</label>
+	<input id="close_margin_minutes" name="close_margin_minutes" type="number" min="1" value={data.closeMarginMinutes} required />
 
 	<label for="min_opening_bid">Minimum opening bid</label>
 	<input id="min_opening_bid" name="min_opening_bid" type="number" min="1" value={data.minOpeningBid} required />

@@ -7,7 +7,9 @@
 		return () => clearInterval(t);
 	});
 
-	const remaining = $derived(new Date(data.auctionClose).getTime() - now);
+	const remaining = $derived(
+		new Date(data.nextHammer?.closeAt ?? data.auctionClose).getTime() - now
+	);
 
 	function countdown(ms: number): string {
 		if (ms <= 0) return 'Hammer down';
@@ -24,20 +26,25 @@
 
 {#if data.user}
 	<div class="panel countdown">
-		{#if data.auctionOpen}
-			<span class="muted">Auction closes in</span>
+		{#if data.auctionOpen && data.nextHammer}
+			<span class="muted">Next hammer: {data.nextHammer.flag} {data.nextHammer.name} in</span>
 			<strong>{countdown(remaining)}</strong>
-			<span class="muted">— one hour before the first kickoff. {data.unsoldCount} of {data.teamCount} lots still without a bid.</span>
+			<span class="muted">
+				— lots close one at a time, the last two hours before kickoff
+				({new Date(data.auctionClose).toLocaleString()}). {data.unsoldCount} of
+				{data.teamCount} lots still without a bid.
+			</span>
 		{:else}
 			<strong>The hammer has fallen.</strong>
 			<span class="muted">Scores now follow the tournament. Good luck.</span>
 		{/if}
 	</div>
 
-	<h2>Your lots</h2>
+	<h2>Your lot</h2>
 	{#if data.mine.length === 0}
 		<p class="muted">
-			You hold no high bids. Browse <a href="/teams">the sale</a> before the hammer falls.
+			You hold no high bid — it's one team per bidder, so choose well. Browse
+			<a href="/teams">the sale</a> before the hammer falls.
 		</p>
 	{:else}
 		<table>
@@ -83,7 +90,9 @@
 		<a class="button" href="/register">Register with your bonhams.com address</a>
 		&nbsp; or <a href="/login">sign in</a>.
 	</p>
-	<p class="muted">The auction closes one hour before kickoff of the first match.</p>
+	<p class="muted">
+		Lots are hammered one at a time, the last two hours before kickoff of the first match.
+	</p>
 {/if}
 
 <style>

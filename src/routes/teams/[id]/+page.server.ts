@@ -2,10 +2,9 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import {
-	auctionOpen,
-	budget,
-	committed,
 	getTeamWithBid,
+	leadingBids,
+	lotOpen,
 	minimumNextBid,
 	placeBid
 } from '$lib/server/auction';
@@ -24,19 +23,27 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		)
 		.all(team.id) as { amount: number; created_at: string; name: string }[];
 
+	// One team per bidder: if the user leads a different lot they cannot bid here.
+	const heldOther = leadingBids(locals.user.id).find((t) => t.id !== team.id) ?? null;
+
 	return {
 		team,
+		lotOpen: lotOpen(team),
 		history,
 		points: teamPoints(team.group_position, team.exit_stage),
 		nextBid: minimumNextBid(team.high_bid),
-		available: budget() - committed(locals.user.id, team.id)
+		heldOther: heldOther && {
+			id: heldOther.id,
+			name: heldOther.name,
+			flag: heldOther.flag,
+			closed: !lotOpen(heldOther)
+		}
 	};
 };
 
 export const actions: Actions = {
 	bid: async ({ locals, params, request }) => {
 		if (!locals.user) redirect(303, '/login');
-		if (!auctionOpen()) return fail(400, { error: 'The auction has closed.' });
 
 		const form = await request.formData();
 		const amount = Number(form.get('amount'));

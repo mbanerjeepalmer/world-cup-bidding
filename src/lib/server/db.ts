@@ -55,8 +55,11 @@ CREATE TABLE IF NOT EXISTS settings (
 const DEFAULT_SETTINGS: Record<string, string> = {
 	// First match: Mexico City, 11 June 2026. Auction closes one hour before kickoff.
 	kickoff: '2026-06-12T02:00:00Z',
-	budget: '1000',
-	min_opening_bid: '10'
+	min_opening_bid: '10',
+	// Staggered close: one lot hammered every `stagger_minutes`, the last one
+	// `close_margin_minutes` before kickoff of the first match.
+	stagger_minutes: '5',
+	close_margin_minutes: '120'
 };
 
 const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
