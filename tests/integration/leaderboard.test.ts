@@ -105,7 +105,8 @@ describe('tenancy — each email domain is its own game', () => {
 		// In the gmail room Brazil is unsold: the opening minimum applies, and
 		// the gmail bid does not have to outbid (or disturb) the example.com one.
 		expect(placeBid(brazil, rival, 5).ok).toBe(false);
-		expect(placeBid(brazil, rival, 10)).toEqual({ ok: true });
+		// outbid is null too: the example.com high bidder is not 'deposed' cross-tenant.
+		expect(placeBid(brazil, rival, 10)).toEqual({ ok: true, outbid: null });
 		expect(getTeamWithBid(brazil, 'example.com')!.high_bidder_id).toBe(alice);
 		expect(getTeamWithBid(brazil, 'example.com')!.high_bid).toBe(1000);
 		expect(getTeamWithBid(brazil, 'gmail.com')!.high_bidder_id).toBe(rival);

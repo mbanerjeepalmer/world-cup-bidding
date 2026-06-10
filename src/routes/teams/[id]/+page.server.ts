@@ -11,6 +11,7 @@ import {
 } from '$lib/server/auction';
 import { teamPoints } from '$lib/server/scoring';
 import { emailDomain } from '$lib/server/auth';
+import { sendOutbidNotice } from '$lib/server/email';
 
 export const load: PageServerLoad = ({ locals, params }) => {
 	if (!locals.user) redirect(303, '/login');
@@ -46,13 +47,27 @@ export const load: PageServerLoad = ({ locals, params }) => {
 };
 
 export const actions: Actions = {
-	bid: async ({ locals, params, request }) => {
+	bid: async ({ locals, params, request, url }) => {
 		if (!locals.user) redirect(303, '/login');
 
 		const form = await request.formData();
 		const amount = Number(form.get('amount'));
 		const result = placeBid(Number(params.id), locals.user.id, amount);
 		if (!result.ok) return fail(400, { error: result.error, amount: form.get('amount') });
+
+		// Tell the deposed bidder — fire and forget, the bid stands either way.
+		if (result.outbid) {
+			const team = getTeamWithBid(Number(params.id), emailDomain(locals.user.email));
+			if (team)
+				void sendOutbidNotice(result.outbid.email, {
+					team: team.name,
+					flag: team.flag,
+					amount,
+					link: `${url.origin}/teams/${team.id}`
+				}).then((r) => {
+					if (!r.ok) console.error(`[email] outbid notice: ${r.error}`);
+				});
+		}
 		return { success: `Bid placed: ${amount} BonBons.` };
 	}
 };

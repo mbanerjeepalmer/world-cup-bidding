@@ -60,6 +60,13 @@ CREATE TABLE IF NOT EXISTS settings (
 	key TEXT PRIMARY KEY,
 	value TEXT NOT NULL
 );
+
+-- One row per notification email ever sent (e.g. lot_won:domain:teamId), so
+-- hammer-fall notices go out exactly once even across server restarts.
+CREATE TABLE IF NOT EXISTS notifications (
+	key TEXT PRIMARY KEY,
+	created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `);
 
 // v2: passwords gave way to emailed magic links; drop the column from v1 databases.

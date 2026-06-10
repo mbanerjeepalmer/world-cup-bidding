@@ -3,7 +3,7 @@ import { db, setSetting } from '../src/lib/server/db';
 /** Wipe every table so each integration test starts from a known empty state. */
 export function resetDb() {
 	db.exec(
-		'DELETE FROM bids; DELETE FROM sessions; DELETE FROM login_tokens; DELETE FROM users; DELETE FROM teams;'
+		'DELETE FROM bids; DELETE FROM sessions; DELETE FROM login_tokens; DELETE FROM users; DELETE FROM teams; DELETE FROM notifications;'
 	);
 }
 

@@ -140,7 +140,10 @@ export function leadingBids(userId: number): TeamWithBid[] {
 	return listTeamsWithBids(userDomain(userId)).filter((t) => t.high_bidder_id === userId);
 }
 
-export type BidResult = { ok: true } | { ok: false; error: string };
+/** Who lost the high bid when a bid lands, so the caller can notify them. */
+export type OutbidBidder = { email: string; name: string };
+
+export type BidResult = { ok: true; outbid: OutbidBidder | null } | { ok: false; error: string };
 
 export const placeBid = db.transaction((teamId: number, userId: number, amount: number): BidResult => {
 	if (!Number.isInteger(amount) || amount <= 0)
@@ -171,10 +174,17 @@ export const placeBid = db.transaction((teamId: number, userId: number, amount: 
 				: `${held.name} is your team for the tournament — the hammer has fallen on it.`
 		};
 
+	// The bidder being deposed, captured before the insert that deposes them.
+	const previous = team.high_bidder_id
+		? (db.prepare('SELECT email, name FROM users WHERE id = ?').get(team.high_bidder_id) as
+				| OutbidBidder
+				| undefined)
+		: undefined;
+
 	db.prepare('INSERT INTO bids (team_id, user_id, amount) VALUES (?, ?, ?)').run(
 		teamId,
 		userId,
 		amount
 	);
-	return { ok: true };
+	return { ok: true, outbid: previous ?? null };
 });

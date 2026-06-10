@@ -17,16 +17,19 @@ beforeEach(() => {
 
 describe('placeBid — happy path', () => {
 	it('records an opening bid at the minimum and makes the bidder the high bidder', () => {
-		expect(placeBid(brazil, alice, 10)).toEqual({ ok: true });
+		expect(placeBid(brazil, alice, 10)).toEqual({ ok: true, outbid: null });
 		const team = getTeamWithBid(brazil, 'example.com')!;
 		expect(team.high_bid).toBe(10);
 		expect(team.high_bidder_id).toBe(alice);
 		expect(team.bid_count).toBe(1);
 	});
 
-	it('lets another bidder outbid at the next standard increment', () => {
+	it('lets another bidder outbid at the next standard increment, naming the deposed bidder', () => {
 		placeBid(brazil, alice, 10);
-		expect(placeBid(brazil, bob, 15)).toEqual({ ok: true });
+		expect(placeBid(brazil, bob, 15)).toEqual({
+			ok: true,
+			outbid: { email: 'alice@example.com', name: 'Alice' }
+		});
 		expect(getTeamWithBid(brazil, 'example.com')!.high_bidder_id).toBe(bob);
 	});
 });
@@ -84,7 +87,7 @@ describe('placeBid — staggered hammer (last lot two hours before kickoff)', ()
 			ok: false,
 			error: 'The hammer has fallen on this lot.'
 		});
-		expect(placeBid(brazil, alice, 10)).toEqual({ ok: true });
+		expect(placeBid(brazil, alice, 10)).toEqual({ ok: true, outbid: null });
 	});
 
 	it('locks the winner of a hammered lot out of the rest of the sale', () => {
@@ -97,7 +100,7 @@ describe('placeBid — staggered hammer (last lot two hours before kickoff)', ()
 		expect(r.ok).toBe(false);
 		expect((r as { error: string }).error).toContain('Argentina is your team');
 		// Bob is still free to fight for Brazil.
-		expect(placeBid(brazil, bob, 10)).toEqual({ ok: true });
+		expect(placeBid(brazil, bob, 10)).toEqual({ ok: true, outbid: null });
 	});
 });
 
@@ -115,11 +118,11 @@ describe('placeBid — one team per bidder', () => {
 		const argentina = makeTeam('Argentina');
 		placeBid(brazil, alice, 10);
 		placeBid(brazil, bob, 15); // Bob takes Brazil from Alice
-		expect(placeBid(argentina, alice, 10)).toEqual({ ok: true });
+		expect(placeBid(argentina, alice, 10)).toEqual({ ok: true, outbid: null });
 		expect(leadingBids(alice).map((t) => t.name)).toEqual(['Argentina']);
 	});
 
 	it('accepts an arbitrarily large bid — there is no budget, the ratio is the brake', () => {
-		expect(placeBid(brazil, alice, 1_000_000)).toEqual({ ok: true });
+		expect(placeBid(brazil, alice, 1_000_000)).toEqual({ ok: true, outbid: null });
 	});
 });
