@@ -16,7 +16,13 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href={favicon} type="image/svg+xml" />
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+	<meta name="theme-color" content="#0d0d0d" />
+	<meta
+		name="description"
+		content="Bid BonBons on World Cup teams against your colleagues. Points ÷ price — the cheaper the glory, the higher you rank."
+	/>
 	<title>The BonBon World Cup Auction</title>
 </svelte:head>
 
