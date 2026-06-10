@@ -5,23 +5,32 @@ import { test, expect, type Page } from '@playwright/test';
 // so the admin journey is declared first and deliberately registers that user.
 test.describe.configure({ mode: 'serial' });
 
-async function register(page: Page, email: string, name: string, password = 'password123') {
+// Auth is passwordless: the form emails a magic link, which the e2e server
+// echoes into the page (MAGIC_LINK_ECHO=1 in playwright.config.ts), and the
+// link lands on a confirm page so mail scanners can't burn the token.
+async function followMagicLink(page: Page) {
+	await page.getByRole('link', { name: 'use the link directly' }).click();
+	await page.getByRole('button', { name: 'Step into the saleroom' }).click();
+}
+
+async function register(page: Page, email: string, name: string) {
 	await page.goto('/register');
 	await page.fill('input[name="email"]', email);
 	await page.fill('input[name="name"]', name);
-	await page.fill('input[name="password"]', password);
 	await page.click('button[type="submit"]');
+	await followMagicLink(page);
 }
 
-test('the bonhams.com gate rejects an outside email', async ({ page }) => {
-	await register(page, 'outsider@gmail.com', 'Outsider');
-	await expect(page).toHaveURL(/\/register/);
-	await expect(page.getByText('limited to bonhams.com')).toBeVisible();
-});
+async function login(page: Page, email: string) {
+	await page.goto('/login');
+	await page.fill('input[name="email"]', email);
+	await page.click('button[type="submit"]');
+	await followMagicLink(page);
+}
 
 test('full journey: register admin, bid, set a result, see points ÷ price', async ({ page }) => {
 	// First successful signup → admin.
-	await register(page, 'auctioneer@bonhams.com', 'Auctioneer');
+	await register(page, 'auctioneer@example.com', 'Auctioneer');
 	await expect(page).toHaveURL('/');
 	await expect(page.getByText('no lot held')).toBeVisible();
 	await expect(page.getByRole('link', { name: 'Admin' })).toBeVisible();
@@ -66,7 +75,7 @@ test('full journey: register admin, bid, set a result, see points ÷ price', asy
 });
 
 test('a second bidder can outbid and take the lead', async ({ page }) => {
-	await register(page, 'bidder2@bonhams.com', 'Bidder Two');
+	await register(page, 'bidder2@example.com', 'Bidder Two');
 	await expect(page).toHaveURL('/');
 	// Bidder Two is not the admin.
 	await expect(page.getByRole('link', { name: 'Admin' })).toHaveCount(0);
@@ -81,11 +90,8 @@ test('a second bidder can outbid and take the lead', async ({ page }) => {
 });
 
 test('fixtures come from the feed: groups set, qualifiers in, placeholders out', async ({ page }) => {
-	// Sign back in as the admin (also covers the login flow).
-	await page.goto('/login');
-	await page.fill('input[name="email"]', 'auctioneer@bonhams.com');
-	await page.fill('input[name="password"]', 'password123');
-	await page.click('button[type="submit"]');
+	// Sign back in as the admin (also covers the magic-link login flow).
+	await login(page, 'auctioneer@example.com');
 	await expect(page).toHaveURL('/');
 
 	// The startup sync ran against the feed fixture: real qualifiers replace
@@ -104,7 +110,7 @@ test('fixtures come from the feed: groups set, qualifiers in, placeholders out',
 });
 
 test('a bid below the minimum increment is blocked', async ({ page }) => {
-	await register(page, 'bidder3@bonhams.com', 'Bidder Three');
+	await register(page, 'bidder3@example.com', 'Bidder Three');
 	await page.goto('/teams');
 	await page.getByRole('link', { name: /Brazil/ }).click();
 
@@ -120,4 +126,26 @@ test('a bid below the minimum increment is blocked', async ({ page }) => {
 	await expect(page.getByText('High bid:')).toContainText('15 BonBons');
 	await expect(page.getByText('by Bidder Two')).toBeVisible();
 	await expect(page.getByText('You hold this lot')).toHaveCount(0);
+});
+
+test('each email domain is its own tenant: a private sale and leaderboard', async ({ page }) => {
+	// A bidder from another domain registers — open to anyone.
+	await register(page, 'rival@gmail.com', 'Rival');
+	await expect(page).toHaveURL('/');
+
+	// Brazil stands at 15 in the example.com room, but gmail sees a fresh lot
+	// and can open at the minimum without outbidding anyone.
+	await page.goto('/teams');
+	await page.getByRole('link', { name: /Brazil/ }).click();
+	await expect(page.getByText('Opening bid: 10 BonBons')).toBeVisible();
+	await page.getByRole('button', { name: 'Place bid' }).click();
+	await expect(page.getByText('Bid placed: 10 BonBons.')).toBeVisible();
+	await expect(page.getByText('You hold this lot')).toBeVisible();
+
+	// And the gmail leaderboard shows gmail bidders only.
+	await page.goto('/leaderboard');
+	await expect(page.getByText('@gmail.com').first()).toBeVisible();
+	await expect(page.getByRole('row', { name: /Rival/ })).toBeVisible();
+	await expect(page.getByText('Auctioneer')).toHaveCount(0);
+	await expect(page.getByText('Bidder Two')).toHaveCount(0);
 });

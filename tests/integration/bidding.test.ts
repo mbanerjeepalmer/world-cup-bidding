@@ -18,7 +18,7 @@ beforeEach(() => {
 describe('placeBid — happy path', () => {
 	it('records an opening bid at the minimum and makes the bidder the high bidder', () => {
 		expect(placeBid(brazil, alice, 10)).toEqual({ ok: true });
-		const team = getTeamWithBid(brazil)!;
+		const team = getTeamWithBid(brazil, 'example.com')!;
 		expect(team.high_bid).toBe(10);
 		expect(team.high_bidder_id).toBe(alice);
 		expect(team.bid_count).toBe(1);
@@ -27,7 +27,7 @@ describe('placeBid — happy path', () => {
 	it('lets another bidder outbid at the next standard increment', () => {
 		placeBid(brazil, alice, 10);
 		expect(placeBid(brazil, bob, 15)).toEqual({ ok: true });
-		expect(getTeamWithBid(brazil)!.high_bidder_id).toBe(bob);
+		expect(getTeamWithBid(brazil, 'example.com')!.high_bidder_id).toBe(bob);
 	});
 });
 

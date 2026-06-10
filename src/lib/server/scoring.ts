@@ -1,5 +1,5 @@
 import { db } from './db';
-import { listTeamsWithBids, type TeamWithBid } from './auction';
+import { domainOf, listTeamsWithBids, type TeamWithBid } from './auction';
 
 // Group stage points (groups of four), per v1.md: fourth scores nothing,
 // third scores one, and the group winner scores 3 — so a team that wins its
@@ -48,14 +48,15 @@ export type LeaderboardEntry = {
 /**
  * Once the auction closes, every team's high bidder owns it at their bid
  * price. The score for a team is points ÷ price; a player's total is the sum
- * across the teams they own.
+ * across the teams they own. Each email domain is a separate tenant: its
+ * leaderboard contains only that domain's bidders, scored against that
+ * domain's own sale.
  */
-export function leaderboard(): LeaderboardEntry[] {
-	const users = db.prepare('SELECT id, name FROM users ORDER BY name').all() as {
-		id: number;
-		name: string;
-	}[];
-	const teams = listTeamsWithBids();
+export function leaderboard(domain: string): LeaderboardEntry[] {
+	const users = db
+		.prepare(`SELECT id, name FROM users WHERE ${domainOf('email')} = ? ORDER BY name`)
+		.all(domain) as { id: number; name: string }[];
+	const teams = listTeamsWithBids(domain);
 
 	const entries = users.map((u) => {
 		const owned = teams

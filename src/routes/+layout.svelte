@@ -20,7 +20,7 @@
 
 <header>
 	<div class="bar">
-		<a href="/" class="wordmark">BONHAMS <span>World Cup Auction</span></a>
+		<a href="/" class="wordmark">BONBON <span>World Cup Auction</span></a>
 		<nav>
 			{#if data.user}
 				{#each links as link (link.href)}

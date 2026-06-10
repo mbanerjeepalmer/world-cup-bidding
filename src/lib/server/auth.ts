@@ -11,23 +11,56 @@ export type User = {
 
 const SESSION_COOKIE = 'session';
 const SESSION_DAYS = 30;
-const ALLOWED_DOMAIN = 'bonhams.com';
 
-export function emailAllowed(email: string): boolean {
-	return /^[^\s@]+@[^\s@]+$/.test(email) && email.toLowerCase().endsWith(`@${ALLOWED_DOMAIN}`);
+// Registration is open to any domain; each domain is its own tenant.
+export function emailValid(email: string): boolean {
+	return /^[^\s@]+@[^\s@]+$/.test(email);
 }
 
-export function hashPassword(password: string): string {
-	const salt = crypto.randomBytes(16).toString('hex');
-	const hash = crypto.scryptSync(password, salt, 64).toString('hex');
-	return `${salt}:${hash}`;
+/** The tenant key: bidders only ever see the auction on their own domain. */
+export function emailDomain(email: string): string {
+	return email.split('@')[1]?.toLowerCase() ?? '';
 }
 
-export function verifyPassword(password: string, stored: string): boolean {
-	const [salt, hash] = stored.split(':');
-	if (!salt || !hash) return false;
-	const candidate = crypto.scryptSync(password, salt, 64);
-	return crypto.timingSafeEqual(candidate, Buffer.from(hash, 'hex'));
+const TOKEN_MINUTES = 20;
+
+function tokenHash(token: string): string {
+	return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+export type LoginToken = { email: string; name: string | null };
+
+/**
+ * Mint a single-use sign-in token for this address; any earlier one is voided.
+ * `name` is carried for registrations so the account is only created once the
+ * link is clicked. Only the hash is stored — the emailed link holds the token.
+ */
+export function createLoginToken(email: string, name: string | null = null): string {
+	const token = crypto.randomBytes(32).toString('hex');
+	const expires = new Date(Date.now() + TOKEN_MINUTES * 60 * 1000);
+	db.prepare('DELETE FROM login_tokens WHERE email = ?').run(email);
+	db.prepare(
+		'INSERT INTO login_tokens (token_hash, email, name, expires_at) VALUES (?, ?, ?, ?)'
+	).run(tokenHash(token), email, name, expires.toISOString());
+	return token;
+}
+
+/** Check a token without spending it — the verify page peeks before the user confirms. */
+export function peekLoginToken(token: string): LoginToken | null {
+	const row = db
+		.prepare('SELECT email, name, expires_at FROM login_tokens WHERE token_hash = ?')
+		.get(tokenHash(token)) as
+		| { email: string; name: string | null; expires_at: string }
+		| undefined;
+	if (!row || new Date(row.expires_at) < new Date()) return null;
+	return { email: row.email, name: row.name };
+}
+
+/** Spend a token: valid once, then gone. */
+export function consumeLoginToken(token: string): LoginToken | null {
+	const found = peekLoginToken(token);
+	db.prepare('DELETE FROM login_tokens WHERE token_hash = ?').run(tokenHash(token));
+	return found;
 }
 
 export function createSession(cookies: Cookies, userId: number) {

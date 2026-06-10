@@ -1,43 +1,63 @@
-import { describe, it, expect } from 'vitest';
-import { emailAllowed, hashPassword, verifyPassword } from '../../src/lib/server/auth';
+import { describe, it, expect, beforeEach } from 'vitest';
+import {
+	consumeLoginToken,
+	createLoginToken,
+	emailValid,
+	peekLoginToken
+} from '../../src/lib/server/auth';
+import { db } from '../../src/lib/server/db';
 
-// v1.md: "Limit signups to people with bonhams.com email addresses."
-describe('emailAllowed — bonhams.com gate', () => {
-	it('accepts bonhams.com addresses (case-insensitively)', () => {
-		expect(emailAllowed('alice@bonhams.com')).toBe(true);
-		expect(emailAllowed('ALICE@BONHAMS.COM')).toBe(true);
-		expect(emailAllowed('first.last@bonhams.com')).toBe(true);
-	});
-
-	it('rejects any other domain', () => {
-		expect(emailAllowed('someone@gmail.com')).toBe(false);
-		expect(emailAllowed('someone@bonhams.com.evil.com')).toBe(false);
-		expect(emailAllowed('someone@notbonhams.com')).toBe(false);
+// Registration is open to any domain; the leaderboard groups bidders by it.
+describe('emailValid', () => {
+	it('accepts well-formed addresses from any domain', () => {
+		expect(emailValid('alice@example.com')).toBe(true);
+		expect(emailValid('ALICE@EXAMPLE.COM')).toBe(true);
+		expect(emailValid('first.last@gmail.com')).toBe(true);
 	});
 
 	it('rejects malformed addresses', () => {
-		expect(emailAllowed('')).toBe(false);
-		expect(emailAllowed('bonhams.com')).toBe(false);
-		expect(emailAllowed('a b@bonhams.com')).toBe(false);
-		expect(emailAllowed('@bonhams.com')).toBe(false);
+		expect(emailValid('')).toBe(false);
+		expect(emailValid('example.com')).toBe(false);
+		expect(emailValid('a b@example.com')).toBe(false);
+		expect(emailValid('@example.com')).toBe(false);
 	});
 });
 
-describe('password hashing', () => {
-	it('round-trips a correct password and salts uniquely', () => {
-		const a = hashPassword('correct horse battery');
-		const b = hashPassword('correct horse battery');
-		expect(a).not.toBe(b); // distinct salts
-		expect(verifyPassword('correct horse battery', a)).toBe(true);
-		expect(verifyPassword('correct horse battery', b)).toBe(true);
+describe('magic-link tokens — single use, short lived', () => {
+	beforeEach(() => db.exec('DELETE FROM login_tokens'));
+
+	it('peek checks without spending; consume spends exactly once', () => {
+		const token = createLoginToken('alice@example.com', 'Alice');
+		expect(peekLoginToken(token)).toEqual({ email: 'alice@example.com', name: 'Alice' });
+		// Peeking (the confirm page load) must not burn the token.
+		expect(consumeLoginToken(token)).toEqual({ email: 'alice@example.com', name: 'Alice' });
+		expect(consumeLoginToken(token)).toBeNull();
 	});
 
-	it('rejects the wrong password', () => {
-		const stored = hashPassword('correct horse battery');
-		expect(verifyPassword('wrong password', stored)).toBe(false);
+	it('a fresh token for the same address voids the old one', () => {
+		const first = createLoginToken('alice@example.com');
+		const second = createLoginToken('alice@example.com');
+		expect(consumeLoginToken(first)).toBeNull();
+		expect(consumeLoginToken(second)).toEqual({ email: 'alice@example.com', name: null });
 	});
 
-	it('does not throw on a malformed stored hash', () => {
-		expect(verifyPassword('anything', 'garbage')).toBe(false);
+	it('rejects expired tokens', () => {
+		const token = createLoginToken('alice@example.com');
+		db.prepare('UPDATE login_tokens SET expires_at = ?').run('2000-01-01T00:00:00Z');
+		expect(consumeLoginToken(token)).toBeNull();
+	});
+
+	it('rejects garbage tokens', () => {
+		expect(peekLoginToken('not-a-token')).toBeNull();
+		expect(consumeLoginToken('not-a-token')).toBeNull();
+	});
+
+	it('stores only a hash, never the token itself', () => {
+		const token = createLoginToken('alice@example.com');
+		const rows = db.prepare('SELECT token_hash FROM login_tokens').all() as {
+			token_hash: string;
+		}[];
+		expect(rows).toHaveLength(1);
+		expect(rows[0].token_hash).not.toBe(token);
 	});
 });

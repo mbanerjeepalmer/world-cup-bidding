@@ -23,7 +23,9 @@ export default defineConfig({
 		// WC_FEED_URL points the build/startup sync at a committed feed fixture
 		// (real 2026 structure, dates shifted to 2099 so the auction stays open)
 		// instead of the network.
-		command: `rm -rf .e2e-data && WC_FEED_URL=e2e/fixtures/feed.json DATABASE_DIR=.e2e-data npm run build && WC_FEED_URL=e2e/fixtures/feed.json DATABASE_DIR=.e2e-data PORT=${PORT} ORIGIN=http://localhost:${PORT} node build`,
+		// MAGIC_LINK_ECHO surfaces sign-in links in the UI so the journeys can
+		// follow them without a mailbox.
+		command: `rm -rf .e2e-data && WC_FEED_URL=e2e/fixtures/feed.json DATABASE_DIR=.e2e-data npm run build && WC_FEED_URL=e2e/fixtures/feed.json DATABASE_DIR=.e2e-data MAGIC_LINK_ECHO=1 PORT=${PORT} ORIGIN=http://localhost:${PORT} node build`,
 		port: PORT,
 		reuseExistingServer: false,
 		timeout: 120_000

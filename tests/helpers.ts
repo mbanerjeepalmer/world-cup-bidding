@@ -2,13 +2,13 @@ import { db, setSetting } from '../src/lib/server/db';
 
 /** Wipe every table so each integration test starts from a known empty state. */
 export function resetDb() {
-	db.exec('DELETE FROM bids; DELETE FROM sessions; DELETE FROM users; DELETE FROM teams;');
+	db.exec(
+		'DELETE FROM bids; DELETE FROM sessions; DELETE FROM login_tokens; DELETE FROM users; DELETE FROM teams;'
+	);
 }
 
-export function makeUser(name: string, email = `${name.toLowerCase()}@bonhams.com`): number {
-	const r = db
-		.prepare('INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)')
-		.run(email, name, 'salt:deadbeef');
+export function makeUser(name: string, email = `${name.toLowerCase()}@example.com`): number {
+	const r = db.prepare('INSERT INTO users (email, name) VALUES (?, ?)').run(email, name);
 	return Number(r.lastInsertRowid);
 }
 

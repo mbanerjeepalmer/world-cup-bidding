@@ -3,12 +3,14 @@ import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { listTeamsWithBids } from '$lib/server/auction';
 import { teamPoints } from '$lib/server/scoring';
+import { emailDomain } from '$lib/server/auth';
 
 const VALID_STAGES = ['', 'r32', 'r16', 'qf', 'sf', 'final', 'champion'];
 
-export const load: PageServerLoad = () => {
+export const load: PageServerLoad = ({ locals }) => {
+	// Results are global; any bid data shown reflects the admin's own tenant.
 	return {
-		teams: listTeamsWithBids().map((t) => ({
+		teams: listTeamsWithBids(locals.user ? emailDomain(locals.user.email) : '').map((t) => ({
 			...t,
 			points: teamPoints(t.group_position, t.exit_stage)
 		}))

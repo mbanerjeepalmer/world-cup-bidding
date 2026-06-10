@@ -1,4 +1,8 @@
 import { db, getSetting } from './db';
+import { emailDomain } from './auth';
+
+/** SQL for the email domain of a users column — the tenant key. */
+export const domainOf = (col: string) => `substr(${col}, instr(${col}, '@') + 1)`;
 
 export type TeamWithBid = {
 	id: number;
@@ -90,37 +94,50 @@ export function minimumNextBid(currentBid: number | null): number {
 	return currentBid + increment(currentBid);
 }
 
+// Each email domain is a separate tenant running its own sale over the same
+// lots, so the high bid and bid count only count bids from that domain.
 const TEAM_WITH_BID_SQL = `
 	SELECT t.id, t.name, t.flag, t.group_name, t.group_position, t.exit_stage,
 		b.amount AS high_bid, b.user_id AS high_bidder_id, u.name AS high_bidder_name,
-		(SELECT COUNT(*) FROM bids WHERE team_id = t.id) AS bid_count
+		(SELECT COUNT(*) FROM bids bb JOIN users bu ON bu.id = bb.user_id
+		 WHERE bb.team_id = t.id AND ${domainOf('bu.email')} = :domain) AS bid_count
 	FROM teams t
 	LEFT JOIN bids b ON b.id = (
-		SELECT id FROM bids WHERE team_id = t.id ORDER BY amount DESC, id ASC LIMIT 1
+		SELECT bb.id FROM bids bb JOIN users bu ON bu.id = bb.user_id
+		WHERE bb.team_id = t.id AND ${domainOf('bu.email')} = :domain
+		ORDER BY bb.amount DESC, bb.id ASC LIMIT 1
 	)
 	LEFT JOIN users u ON u.id = b.user_id
 `;
 
-/** All lots in hammer order (the running order of the sale). */
-export function listTeamsWithBids(): TeamWithBid[] {
+/** All lots in hammer order (the running order of the sale), as one tenant sees them. */
+export function listTeamsWithBids(domain: string): TeamWithBid[] {
 	const schedule = currentSchedule();
 	const rows = db
 		.prepare(`${TEAM_WITH_BID_SQL} ORDER BY t.group_name, t.name`)
-		.all() as Omit<TeamWithBid, 'close_at'>[];
+		.all({ domain }) as Omit<TeamWithBid, 'close_at'>[];
 	return rows.map((t) => ({ ...t, close_at: schedule.get(t.id)!.toISOString() }));
 }
 
-export function getTeamWithBid(teamId: number): TeamWithBid | undefined {
-	const row = db.prepare(`${TEAM_WITH_BID_SQL} WHERE t.id = ?`).get(teamId) as
+export function getTeamWithBid(teamId: number, domain: string): TeamWithBid | undefined {
+	const row = db.prepare(`${TEAM_WITH_BID_SQL} WHERE t.id = :id`).get({ id: teamId, domain }) as
 		| Omit<TeamWithBid, 'close_at'>
 		| undefined;
 	if (!row) return undefined;
 	return { ...row, close_at: currentSchedule().get(row.id)!.toISOString() };
 }
 
-/** Teams where this user currently holds the high bid (at most one). */
+/** The tenant a user bids in — the domain of their email address. */
+export function userDomain(userId: number): string {
+	const row = db.prepare('SELECT email FROM users WHERE id = ?').get(userId) as
+		| { email: string }
+		| undefined;
+	return row ? emailDomain(row.email) : '';
+}
+
+/** Teams where this user currently holds the high bid in their tenant (at most one). */
 export function leadingBids(userId: number): TeamWithBid[] {
-	return listTeamsWithBids().filter((t) => t.high_bidder_id === userId);
+	return listTeamsWithBids(userDomain(userId)).filter((t) => t.high_bidder_id === userId);
 }
 
 export type BidResult = { ok: true } | { ok: false; error: string };
@@ -129,7 +146,9 @@ export const placeBid = db.transaction((teamId: number, userId: number, amount: 
 	if (!Number.isInteger(amount) || amount <= 0)
 		return { ok: false, error: 'Bids must be a whole number of BonBons.' };
 
-	const team = getTeamWithBid(teamId);
+	// All checks run inside the bidder's tenant: another domain's bids never
+	// set the minimum here, and never get outbid from here.
+	const team = getTeamWithBid(teamId, userDomain(userId));
 	if (!team) return { ok: false, error: 'Unknown team.' };
 	if (!lotOpen(team)) return { ok: false, error: 'The hammer has fallen on this lot.' };
 	if (team.high_bidder_id === userId)

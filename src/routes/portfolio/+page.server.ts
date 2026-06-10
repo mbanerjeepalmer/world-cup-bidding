@@ -3,12 +3,13 @@ import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { listTeamsWithBids } from '$lib/server/auction';
 import { teamPoints } from '$lib/server/scoring';
+import { emailDomain } from '$lib/server/auth';
 
 export const load: PageServerLoad = ({ locals }) => {
 	if (!locals.user) redirect(303, '/login');
 	const userId = locals.user.id;
 
-	const teams = listTeamsWithBids();
+	const teams = listTeamsWithBids(emailDomain(locals.user.email));
 	const leading = teams
 		.filter((t) => t.high_bidder_id === userId)
 		.map((t) => {

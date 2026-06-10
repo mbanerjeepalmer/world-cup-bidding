@@ -10,6 +10,7 @@
 	const remaining = $derived(
 		new Date(data.nextHammer?.closeAt ?? data.auctionClose).getTime() - now
 	);
+	const lastRemaining = $derived(new Date(data.auctionClose).getTime() - now);
 
 	function countdown(ms: number): string {
 		if (ms <= 0) return 'Hammer down';
@@ -86,12 +87,43 @@
 		measured not by what your teams win, but by what they win <em>per BonBon paid</em>. Overpay
 		for Brazil and you will be beaten by whoever picked up Curaçao for loose change.
 	</p>
+
+	{#if data.auctionOpen}
+		<div class="panel countdown">
+			{#if data.nextHammer}
+				<span class="muted">Next hammer in</span>
+				<strong>{countdown(remaining)}</strong>
+			{/if}
+			<span class="muted">— final hammer in</span>
+			<strong>{countdown(lastRemaining)}</strong>
+		</div>
+	{:else}
+		<div class="panel countdown">
+			<strong>The hammer has fallen.</strong>
+			<span class="muted">Scores now follow the tournament.</span>
+		</div>
+	{/if}
+
+	<ol class="steps">
+		<li>
+			<strong>Sign in and bid.</strong> Register a paddle with just your email — we send you a
+			sign-in link, no password — then bid BonBons on the team you want.
+		</li>
+		<li>
+			<strong>One team per bidder.</strong> You can lead only one lot at a time; when the hammer
+			falls on a lot you lead, that team is yours and your auction is over. Lots close one at a
+			time, the final one two hours before the opening kickoff.
+		</li>
+		<li>
+			<strong>Points ÷ price.</strong> Your team earns points for its tournament results, and
+			your score is those points divided by the BonBons you paid. The cheaper the glory, the
+			higher you rank.
+		</li>
+	</ol>
+
 	<p>
-		<a class="button" href="/register">Register with your bonhams.com address</a>
+		<a class="button" href="/register">Register for a paddle</a>
 		&nbsp; or <a href="/login">sign in</a>.
-	</p>
-	<p class="muted">
-		Lots are hammered one at a time, the last two hours before kickoff of the first match.
 	</p>
 {/if}
 
@@ -108,5 +140,17 @@
 		font-size: 1.6rem;
 		color: var(--yellow);
 		font-variant-numeric: tabular-nums;
+	}
+
+	.steps {
+		padding-left: 1.25rem;
+	}
+
+	.steps li {
+		margin: 0.75rem 0;
+	}
+
+	.steps strong {
+		color: var(--yellow);
 	}
 </style>

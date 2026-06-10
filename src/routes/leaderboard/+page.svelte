@@ -2,9 +2,10 @@
 	let { data } = $props();
 </script>
 
-<h1>Leaderboard</h1>
+<h1>Leaderboard <span class="domain">@{data.domain}</span></h1>
 <p class="muted">
-	Score is the sum over your teams of tournament points divided by the price paid.
+	Score is the sum over your teams of tournament points divided by the price paid. This is the
+	@{data.domain} sale room — only your colleagues appear here.
 	{#if data.auctionOpen}The auction is still open, so holdings may change.{/if}
 </p>
 
@@ -41,5 +42,11 @@
 <style>
 	tr.me td {
 		background: var(--panel-raised);
+	}
+
+	h1 .domain {
+		font-size: 1rem;
+		letter-spacing: 0.08em;
+		color: var(--text-muted);
 	}
 </style>

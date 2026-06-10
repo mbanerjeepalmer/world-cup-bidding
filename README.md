@@ -1,6 +1,6 @@
 # The BonBon World Cup Auction
 
-A World Cup bidding game for Bonhams colleagues. Every team at the 2026 World Cup
+A World Cup bidding game for colleagues. Every team at the 2026 World Cup
 is a lot in an open auction, paid for in BonBons — **one team per bidder**, and no
 budget: every BonBon you pay divides your points, so overbidding is its own
 punishment. Each team earns tournament points for its results; your score is
@@ -38,7 +38,9 @@ Set `DATABASE_DIR` to control where the SQLite file is stored (defaults to `./da
 
 ## Notes for the auctioneer
 
-- Sign-ups are limited to `@bonhams.com` email addresses.
+- Sign-ups are open to any email address, and each email domain is its own
+  tenant: a private sale room and leaderboard for that domain's colleagues.
+  Bids on one domain never set the price on another.
 - The **first account to register becomes the admin** (the auctioneer); admins can
   promote others from the admin page.
 - Admin → Settings holds the first-match kickoff time (set automatically from the

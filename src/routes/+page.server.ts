@@ -1,9 +1,12 @@
 import type { PageServerLoad } from './$types';
 import { listTeamsWithBids, leadingBids } from '$lib/server/auction';
 import { leaderboard } from '$lib/server/scoring';
+import { emailDomain } from '$lib/server/auth';
 
 export const load: PageServerLoad = ({ locals }) => {
-	const teams = listTeamsWithBids();
+	// Signed out there is no tenant, so the sale shows no bids — just the schedule.
+	const domain = locals.user ? emailDomain(locals.user.email) : '';
+	const teams = listTeamsWithBids(domain);
 	const hot = teams
 		.filter((t) => t.bid_count > 0)
 		.sort((a, b) => b.bid_count - a.bid_count || (b.high_bid ?? 0) - (a.high_bid ?? 0))
@@ -16,6 +19,6 @@ export const load: PageServerLoad = ({ locals }) => {
 		nextHammer: next && { name: next.name, flag: next.flag, closeAt: next.close_at },
 		hot,
 		mine: locals.user ? leadingBids(locals.user.id) : [],
-		top: leaderboard().slice(0, 5)
+		top: locals.user ? leaderboard(domain).slice(0, 5) : []
 	};
 };

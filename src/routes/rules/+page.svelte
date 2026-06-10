@@ -7,6 +7,9 @@
 <h2>The auction</h2>
 <ul>
 	<li>Every World Cup team is a lot, sold by open auction in BonBons, our house currency.</li>
+	<li><strong>Each email domain is its own sale room.</strong> You bid against, and are scored
+		against, colleagues on your own domain only — other domains run the same sale in parallel
+		and never cross your bids.</li>
 	<li><strong>One team per bidder.</strong> You may hold the high bid on only one lot at a time;
 		being outbid frees you to bid elsewhere.</li>
 	<li>There is no budget — bid whatever you like. But remember the scoring: every BonBon you pay
