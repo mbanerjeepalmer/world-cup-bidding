@@ -1,38 +1,10 @@
 import { db } from './db';
 import { domainOf, listTeamsWithBids, type TeamWithBid } from './auction';
+import { teamPoints, outcomeLadder, type OutcomeRung } from '../points';
 
-// Group stage points (groups of four), per v1.md: fourth scores nothing,
-// third scores one, and the group winner scores 3 — so a team that wins its
-// group and is knocked out immediately finishes on 3 points.
-const GROUP_POINTS: Record<number, number> = { 4: 0, 3: 1, 2: 2, 1: 3 };
-
-// Each knockout match won adds points on top, climbing with the round and a
-// premium for the final itself. A team that tops its group and wins the whole
-// tournament scores 3 + 2 + 3 + 4 + 5 + 8 = 25.
-const KNOCKOUT_WIN_POINTS = { r32: 2, r16: 3, qf: 4, sf: 5, final: 8 };
-
-export const EXIT_STAGES = [
-	{ value: 'r32', label: 'Out in Round of 32' },
-	{ value: 'r16', label: 'Out in Round of 16' },
-	{ value: 'qf', label: 'Out in Quarter-finals' },
-	{ value: 'sf', label: 'Out in Semi-finals' },
-	{ value: 'final', label: 'Runners-up' },
-	{ value: 'champion', label: 'Champions' }
-] as const;
-
-/** Tournament points for a team given its group position and how far it got. */
-export function teamPoints(groupPosition: number | null, exitStage: string | null): number {
-	let points = groupPosition !== null ? (GROUP_POINTS[groupPosition] ?? 0) : 0;
-	if (!exitStage) return points;
-	// Points for each knockout round the team won before (or including) its exit.
-	if (['r16', 'qf', 'sf', 'final', 'champion'].includes(exitStage))
-		points += KNOCKOUT_WIN_POINTS.r32;
-	if (['qf', 'sf', 'final', 'champion'].includes(exitStage)) points += KNOCKOUT_WIN_POINTS.r16;
-	if (['sf', 'final', 'champion'].includes(exitStage)) points += KNOCKOUT_WIN_POINTS.qf;
-	if (['final', 'champion'].includes(exitStage)) points += KNOCKOUT_WIN_POINTS.sf;
-	if (exitStage === 'champion') points += KNOCKOUT_WIN_POINTS.final;
-	return points;
-}
+// The pure scoring math lives in $lib/points so the in-browser calculator can
+// share it; re-exported here so server callers keep one import site.
+export { teamPoints, EXIT_STAGES } from '../points';
 
 export type ScoredTeam = TeamWithBid & { points: number; score: number };
 
@@ -76,4 +48,39 @@ export function leaderboard(domain: string): LeaderboardEntry[] {
 	});
 
 	return entries.sort((a, b) => b.score - a.score || b.points - a.points);
+}
+
+export type StateOfPlayLot = TeamWithBid & {
+	positionKnown: boolean;
+	assumedPosition: number;
+	currentPoints: number;
+	currentScore: number;
+	ladder: (OutcomeRung & { score: number })[];
+};
+
+/**
+ * The state of play for one tenant's room: the standings, and every lot with
+ * a high bid carrying its outcome ladder — what each possible tournament
+ * result would score at the price actually paid. Until the group standings
+ * are known a lot is assumed to qualify as runner-up, the conservative case.
+ */
+export function stateOfPlay(domain: string): { board: LeaderboardEntry[]; lots: StateOfPlayLot[] } {
+	const lots = listTeamsWithBids(domain)
+		.filter((t) => t.high_bid !== null)
+		.map((t) => {
+			const assumedPosition = t.group_position ?? 2;
+			const currentPoints = teamPoints(t.group_position, t.exit_stage);
+			return {
+				...t,
+				positionKnown: t.group_position !== null,
+				assumedPosition,
+				currentPoints,
+				currentScore: currentPoints / t.high_bid!,
+				ladder: outcomeLadder(assumedPosition).map((r) => ({
+					...r,
+					score: r.points / t.high_bid!
+				}))
+			};
+		});
+	return { board: leaderboard(domain), lots };
 }

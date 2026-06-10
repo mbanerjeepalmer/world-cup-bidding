@@ -8,6 +8,7 @@
 	const links = [
 		{ href: '/teams', label: 'The Sale' },
 		{ href: '/portfolio', label: 'My Lots' },
+		{ href: '/state-of-play', label: 'State of Play' },
 		{ href: '/leaderboard', label: 'Leaderboard' },
 		{ href: '/rules', label: 'Rules' }
 	];
