@@ -104,6 +104,16 @@ th.num {
 	font-variant-numeric: tabular-nums;
 }
 
+/* On phones, wide data tables scroll sideways inside their own box rather
+   than stretching the whole page. */
+@media (max-width: 640px) {
+	table {
+		display: block;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+}
+
 input,
 select {
 	background: var(--panel-raised);
