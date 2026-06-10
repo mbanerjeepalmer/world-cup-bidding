@@ -121,6 +121,41 @@
 		</li>
 	</ol>
 
+	<h2>Two worked examples</h2>
+	<div class="examples">
+		<div class="panel example">
+			<h3>Priya pays top BonBon</h3>
+			<p>
+				Priya wins Brazil for <strong class="bonbons">500</strong> BonBons. Brazil tops its
+				group and wins the whole tournament — <strong>25 points</strong>, the most any team can
+				score.
+			</p>
+			<p class="math">25 points ÷ 500 BonBons = <strong>0.05</strong></p>
+		</div>
+		<div class="panel example">
+			<h3>Sam buys a bargain</h3>
+			<p>
+				Sam picks up Curaçao for <strong class="bonbons">10</strong> BonBons. They top their
+				group, then go out in the round of 16 — a modest <strong>5 points</strong>.
+			</p>
+			<p class="math">5 points ÷ 10 BonBons = <strong>0.5</strong></p>
+		</div>
+	</div>
+	<p>
+		Sam scores <strong>ten times</strong> what Priya does. Glory is points <em>per BonBon</em>:
+		a cheap team that does respectably beats an expensive team that wins it all.
+	</p>
+
+	<h2>Who you bid against</h2>
+	<p>
+		Everyone who registers with the same email domain — the part after the <code>@</code> —
+		shares one private saleroom. Sign up as <code>priya@acme.com</code> and you bid only against
+		other <code>@acme.com</code> addresses: their bids set your prices, and your leaderboard
+		shows only them. People on <code>gmail.com</code> run a completely separate auction over the
+		same 48 teams, at their own prices. So register with your work email to play against your
+		colleagues.
+	</p>
+
 	<p>
 		<a class="button" href="/register">Register for a paddle</a>
 		&nbsp; or <a href="/login">sign in</a>.
@@ -152,5 +187,36 @@
 
 	.steps strong {
 		color: var(--yellow);
+	}
+
+	.examples {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+		gap: 1rem;
+	}
+
+	.example h3 {
+		margin: 0 0 0.5rem;
+		font-size: 1.1rem;
+	}
+
+	.example .math {
+		margin: 0;
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--border);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.example .math strong {
+		color: var(--yellow);
+		font-size: 1.2rem;
+	}
+
+	code {
+		background: var(--panel-raised);
+		border: 1px solid var(--border);
+		border-radius: 3px;
+		padding: 0.05rem 0.35rem;
+		font-size: 0.9em;
 	}
 </style>
