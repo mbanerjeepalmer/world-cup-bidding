@@ -1,0 +1,12 @@
+.git
+node_modules
+build
+data
+.e2e-data
+.test-data
+.svelte-kit
+docs
+e2e
+tests
+test-results
+playwright-report

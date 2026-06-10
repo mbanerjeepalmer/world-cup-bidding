@@ -19,6 +19,12 @@ Full rules are on the `/rules` page in the app.
   on every `npm run build`, at server start, hourly while the server runs, and
   on demand via the admin page. Set `WC_FEED_URL` to point at another URL or a
   local JSON file (used by the e2e suite).
+- Passwordless auth: signing in or registering emails a single-use magic link
+  (20-minute expiry) via [Resend](https://resend.com). Set `RESEND_API_KEY`
+  (and optionally `EMAIL_FROM`, default `BonBon Auction <onboarding@resend.dev>`).
+  Without a key the link is printed to the server log instead — fine for local
+  play. `MAGIC_LINK_ECHO=1` additionally shows the link in the UI; dev and e2e
+  only, since it lets anyone sign in as anyone.
 
 ## Development
 
@@ -35,6 +41,17 @@ node build
 ```
 
 Set `DATABASE_DIR` to control where the SQLite file is stored (defaults to `./data`).
+
+### Deploying to Coolify
+
+The repo ships a `Dockerfile`; point Coolify at it (build pack: Dockerfile) and:
+
+- mount a persistent volume at `/app/data` so the SQLite file survives deploys
+- set `ORIGIN` to the public URL (e.g. `https://auction.example.com`) —
+  adapter-node rejects form posts without it
+- set `RESEND_API_KEY` (and optionally `EMAIL_FROM`) for sign-in emails
+
+The container listens on port 3000.
 
 ## Notes for the auctioneer
 
