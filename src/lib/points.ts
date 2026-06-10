@@ -73,3 +73,16 @@ export function pointsNeededToBeat(price: number, targetScore: number): number {
 export function neededOutcome(points: number, groupPosition: number): OutcomeRung | null {
 	return outcomeLadder(groupPosition).find((r) => r.points >= points) ?? null;
 }
+
+/**
+ * The highest whole-BonBon price at which a result still strictly beats a
+ * target score, checked with the leaderboard's own division so float edges
+ * can't overshoot by a BonBon. Null means unbounded: any price beats a
+ * scoreless target.
+ */
+export function maxWorthwhileBid(points: number, targetScore: number): number | null {
+	if (targetScore <= 0) return null;
+	let price = Math.max(0, Math.ceil(points / targetScore) - 1);
+	while (price > 0 && points / price <= targetScore) price--;
+	return price;
+}

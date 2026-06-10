@@ -3,7 +3,8 @@ import {
 	teamPoints,
 	outcomeLadder,
 	pointsNeededToBeat,
-	neededOutcome
+	neededOutcome,
+	maxWorthwhileBid
 } from '../../src/lib/points';
 
 // The pure scoring math lives in $lib (not $lib/server) so the in-browser
@@ -85,5 +86,25 @@ describe('neededOutcome — the cheapest result that clears a points bar', () =>
 	it('returns null when even winning the cup is not enough', () => {
 		expect(neededOutcome(26, 1)).toBeNull();
 		expect(neededOutcome(1, 4)).toBeNull(); // 4th in group never scores
+	});
+});
+
+describe('maxWorthwhileBid — the most a result is worth paying for', () => {
+	it('stops one BonBon short of the price that only ties', () => {
+		// 24 points at 80 ties a 0.3 score exactly; 79 beats it.
+		expect(maxWorthwhileBid(24, 0.3)).toBe(79);
+	});
+
+	it('survives floating-point edges where the quotient looks like an integer', () => {
+		// 29 ÷ 0.29 = 100.00000000000001 in floats, but 29/100 only ties → 99.
+		expect(maxWorthwhileBid(29, 0.29)).toBe(99);
+	});
+
+	it('a pointless result is worth nothing at any price', () => {
+		expect(maxWorthwhileBid(0, 0.1)).toBe(0);
+	});
+
+	it('any price beats a scoreless room — unbounded, signalled as null', () => {
+		expect(maxWorthwhileBid(10, 0)).toBeNull();
 	});
 });

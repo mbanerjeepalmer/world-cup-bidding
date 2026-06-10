@@ -9,6 +9,7 @@
 		{ href: '/teams', label: 'The Sale' },
 		{ href: '/portfolio', label: 'My Lots' },
 		{ href: '/state-of-play', label: 'State of Play' },
+		{ href: '/calculator', label: 'Calculator' },
 		{ href: '/leaderboard', label: 'Leaderboard' },
 		{ href: '/rules', label: 'Rules' }
 	];

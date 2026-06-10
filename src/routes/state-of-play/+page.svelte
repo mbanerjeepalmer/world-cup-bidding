@@ -19,7 +19,8 @@
 <h1>State of play <span class="domain">@{data.domain}</span></h1>
 <p class="muted">
 	What every bid in the room needs to be worth it. Each column is a lot at the price its holder
-	paid; each row is a tournament outcome and the score (points ÷ price) it would deliver.
+	paid; each row is a tournament outcome and the score (points ÷ price) it would deliver. Try
+	your own numbers in the <a href="/calculator">calculator</a>.
 </p>
 
 {#if data.mine}
