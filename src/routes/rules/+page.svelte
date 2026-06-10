@@ -12,6 +12,8 @@
 		and never cross your bids.</li>
 	<li><strong>One team per bidder.</strong> You may hold the high bid on only one lot at a time;
 		being outbid frees you to bid elsewhere.</li>
+	<li><strong>We email you when it matters.</strong> An email goes out when another paddle outbids
+		you, and when the hammer falls on a lot you've won — no need to watch the room all day.</li>
 	<li>There is no budget — bid whatever you like. But remember the scoring: every BonBon you pay
 		divides your points at the end. Win the lot too dearly and you lose the game.</li>
 	<li>Lots are hammered <strong>one at a time</strong>, in running order — Group A first,

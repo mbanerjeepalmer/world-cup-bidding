@@ -50,6 +50,7 @@ h2 {
 a {
 	color: var(--yellow);
 	text-decoration: none;
+	transition: color 0.15s ease;
 }
 
 a:hover {
@@ -94,6 +95,10 @@ th {
 	font-weight: 600;
 }
 
+td {
+	transition: background 0.12s ease;
+}
+
 tr:hover td {
 	background: var(--panel);
 }
@@ -123,6 +128,7 @@ select {
 	font: inherit;
 	padding: 0.55rem 0.75rem;
 	width: 100%;
+	transition: border-color 0.15s ease;
 }
 
 input:focus,
@@ -152,12 +158,25 @@ button,
 	letter-spacing: 0.03em;
 	padding: 0.6rem 1.4rem;
 	cursor: pointer;
+	transition: background 0.15s ease, transform 0.1s ease;
 }
 
 button:hover,
 .button:hover {
 	background: var(--yellow-dim);
 	text-decoration: none;
+}
+
+button:active,
+.button:active {
+	transform: translateY(1px);
+}
+
+button:disabled {
+	background: var(--panel-raised);
+	color: var(--text-muted);
+	cursor: not-allowed;
+	transform: none;
 }
 
 button.subtle {
@@ -198,4 +217,51 @@ button.subtle {
 
 .bonbons {
 	font-variant-numeric: tabular-nums;
+}
+
+/* Pages rise gently into place on each navigation (see +layout.svelte's keyed
+   wrapper); success and error notes do the same as they appear. */
+@keyframes rise {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+.page {
+	animation: rise 0.25s ease-out both;
+}
+
+.error,
+.success {
+	animation: rise 0.2s ease-out both;
+}
+
+/* The live-auction badge breathes, softly. */
+@keyframes breathe {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.7;
+	}
+}
+
+.badge.yellow {
+	animation: breathe 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
 }

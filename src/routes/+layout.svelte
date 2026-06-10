@@ -71,7 +71,11 @@
 </header>
 
 <main>
-	{@render children()}
+	{#key page.url.pathname}
+		<div class="page">
+			{@render children()}
+		</div>
+	{/key}
 </main>
 
 <style>
