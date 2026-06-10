@@ -6,7 +6,14 @@
 
 {#if form?.sent}
 	<div class="panel narrow">
-		<p>We've sent a sign-in link to <strong>{form.email}</strong>. It's good for 20 minutes.</p>
+		{#if form.delivered}
+			<p>We've sent a sign-in link to <strong>{form.email}</strong>. It's good for 20 minutes.</p>
+		{:else}
+			<p>
+				This server can't send email yet, so your link was only written to the server log —
+				tell the auctioneer.
+			</p>
+		{/if}
 		{#if form.link}
 			<p class="muted">Dev mode: <a href={form.link}>use the link directly</a>.</p>
 		{/if}

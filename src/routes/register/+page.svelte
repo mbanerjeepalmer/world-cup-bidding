@@ -7,7 +7,12 @@
 
 {#if form?.sent}
 	<div class="panel narrow">
-		{#if form.existing}
+		{#if !form.delivered}
+			<p>
+				This server can't send email yet, so your link was only written to the server log —
+				tell the auctioneer.
+			</p>
+		{:else if form.existing}
 			<p>
 				That address already holds a paddle, so we've sent a <strong>sign-in</strong> link to
 				<strong>{form.email}</strong> instead. It's good for 20 minutes.

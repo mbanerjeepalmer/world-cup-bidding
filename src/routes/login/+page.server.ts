@@ -25,6 +25,8 @@ export const actions: Actions = {
 			console.error(`[email] ${result.error}`);
 			return fail(500, { email, error: 'We could not send the email — try again or tell the auctioneer.' });
 		}
-		return { sent: true, email, link: echoMagicLinks() ? link : null };
+		// delivered is false when the server has no RESEND_API_KEY: the link only
+		// went to the server log, and the page must not claim an email was sent.
+		return { sent: true, delivered: result.delivered, email, link: echoMagicLinks() ? link : null };
 	}
 };
