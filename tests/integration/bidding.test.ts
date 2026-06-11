@@ -66,7 +66,7 @@ describe('placeBid — validation', () => {
 	});
 });
 
-describe('placeBid — staggered hammer (last lot two hours before kickoff)', () => {
+describe('placeBid — staggered hammer (first lot an hour before kickoff)', () => {
 	it('refuses bids once a lot has been hammered', () => {
 		closeAuction();
 		expect(placeBid(brazil, alice, 10)).toEqual({
@@ -76,12 +76,11 @@ describe('placeBid — staggered hammer (last lot two hours before kickoff)', ()
 	});
 
 	it('closes lots one at a time in running order', () => {
-		// Same group, so Argentina is hammered 5 minutes (the default stagger)
+		// Same group, so Argentina is hammered 1 minute (the default stagger)
 		// before Brazil. Pick a kickoff that puts us between the two hammers:
-		// the final hammer (Brazil) is 2.5 minutes away, Argentina fell 2.5
-		// minutes ago.
+		// Argentina fell 30 seconds ago, Brazil falls in 30 seconds.
 		const argentina = makeTeam('Argentina');
-		setSetting('kickoff', new Date(Date.now() + 122.5 * 60_000).toISOString());
+		setSetting('kickoff', new Date(Date.now() + 59.5 * 60_000).toISOString());
 
 		expect(placeBid(argentina, alice, 10)).toEqual({
 			ok: false,
@@ -94,7 +93,7 @@ describe('placeBid — staggered hammer (last lot two hours before kickoff)', ()
 		const argentina = makeTeam('Argentina');
 		placeBid(argentina, alice, 10); // everything still open
 		// Argentina's hammer falls; Brazil remains open.
-		setSetting('kickoff', new Date(Date.now() + 122.5 * 60_000).toISOString());
+		setSetting('kickoff', new Date(Date.now() + 59.5 * 60_000).toISOString());
 
 		const r = placeBid(brazil, alice, 10);
 		expect(r.ok).toBe(false);

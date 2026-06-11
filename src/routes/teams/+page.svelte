@@ -9,8 +9,8 @@
 
 <h1>The Sale</h1>
 <p class="muted">
-	{data.teams.length} lots, hammered one at a time in running order — Group A first, the last lot
-	two hours before kickoff. Minimum next bid follows standard increments — see
+	{data.teams.length} lots, hammered one at a time in running order — Group A first, starting an
+	hour before kickoff. Minimum next bid follows standard increments — see
 	<a href="/rules">the rules</a>.
 </p>
 

@@ -27,14 +27,22 @@ export function staggerMinutes(): number {
 	return Number(getSetting('stagger_minutes'));
 }
 
-/** Minutes between the final hammer and kickoff of the first match. */
-export function closeMarginMinutes(): number {
-	return Number(getSetting('close_margin_minutes'));
+/** The first lot is hammered this long before kickoff (default one hour). */
+export function firstHammerLeadMinutes(): number {
+	return Number(getSetting('first_hammer_lead_minutes'));
 }
 
-/** The last lot is hammered this long before kickoff (default two hours). */
+/** When the first lot's hammer falls — the schedule's anchor. */
+export function firstHammerTime(): Date {
+	return new Date(kickoffTime().getTime() - firstHammerLeadMinutes() * 60 * 1000);
+}
+
+/** When the final lot is hammered: the first hammer plus a stagger per remaining lot. */
 export function lastHammerTime(): Date {
-	return new Date(kickoffTime().getTime() - closeMarginMinutes() * 60 * 1000);
+	const { n } = db.prepare('SELECT COUNT(*) AS n FROM teams').get() as { n: number };
+	return new Date(
+		firstHammerTime().getTime() + Math.max(0, n - 1) * staggerMinutes() * 60 * 1000
+	);
 }
 
 /** True while any lot is still open. */
@@ -44,21 +52,19 @@ export function auctionOpen(): boolean {
 
 /**
  * The staggered running order: lots are hammered one at a time in group order
- * (Group A first), alphabetically within a group, one every `intervalMinutes`,
- * with the final lot closing at `lastHammer`.
+ * (Group A first), alphabetically within a group, starting at `firstHammer`
+ * and then one every `intervalMinutes`.
  */
 export function scheduleCloseTimes<T extends { id: number; group_name: string; name: string }>(
 	lots: T[],
-	lastHammer: Date,
+	firstHammer: Date,
 	intervalMinutes: number
 ): Map<number, Date> {
 	const order = [...lots].sort(
 		(a, b) => a.group_name.localeCompare(b.group_name) || a.name.localeCompare(b.name)
 	);
 	const step = intervalMinutes * 60 * 1000;
-	return new Map(
-		order.map((t, i) => [t.id, new Date(lastHammer.getTime() - (order.length - 1 - i) * step)])
-	);
+	return new Map(order.map((t, i) => [t.id, new Date(firstHammer.getTime() + i * step)]));
 }
 
 function currentSchedule(): Map<number, Date> {
@@ -67,7 +73,7 @@ function currentSchedule(): Map<number, Date> {
 		group_name: string;
 		name: string;
 	}[];
-	return scheduleCloseTimes(lots, lastHammerTime(), staggerMinutes());
+	return scheduleCloseTimes(lots, firstHammerTime(), staggerMinutes());
 }
 
 export function lotOpen(team: Pick<TeamWithBid, 'close_at'>): boolean {

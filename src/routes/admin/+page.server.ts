@@ -8,7 +8,7 @@ export const load: PageServerLoad = () => {
 		kickoff: getSetting('kickoff'),
 		minOpeningBid: getSetting('min_opening_bid'),
 		staggerMinutes: getSetting('stagger_minutes'),
-		closeMarginMinutes: getSetting('close_margin_minutes'),
+		firstHammerLeadMinutes: getSetting('first_hammer_lead_minutes'),
 		users: db
 			.prepare('SELECT id, email, name, is_admin, created_at FROM users ORDER BY created_at')
 			.all() as { id: number; email: string; name: string; is_admin: number; created_at: string }[]
@@ -21,7 +21,7 @@ export const actions: Actions = {
 		const kickoff = String(form.get('kickoff') ?? '').trim();
 		const minBid = Number(form.get('min_opening_bid'));
 		const stagger = Number(form.get('stagger_minutes'));
-		const margin = Number(form.get('close_margin_minutes'));
+		const lead = Number(form.get('first_hammer_lead_minutes'));
 
 		if (Number.isNaN(new Date(kickoff).getTime()))
 			return fail(400, { error: 'Kickoff must be a valid ISO date-time, e.g. 2026-06-12T02:00:00Z.' });
@@ -29,13 +29,13 @@ export const actions: Actions = {
 			return fail(400, { error: 'Minimum opening bid must be a positive whole number.' });
 		if (!Number.isInteger(stagger) || stagger <= 0)
 			return fail(400, { error: 'Minutes between hammers must be a positive whole number.' });
-		if (!Number.isInteger(margin) || margin <= 0)
-			return fail(400, { error: 'Final-hammer margin must be a positive whole number of minutes.' });
+		if (!Number.isInteger(lead) || lead <= 0)
+			return fail(400, { error: 'First-hammer lead must be a positive whole number of minutes.' });
 
 		setSetting('kickoff', new Date(kickoff).toISOString());
 		setSetting('min_opening_bid', String(minBid));
 		setSetting('stagger_minutes', String(stagger));
-		setSetting('close_margin_minutes', String(margin));
+		setSetting('first_hammer_lead_minutes', String(lead));
 		return { success: 'Settings saved.' };
 	},
 	sync: async () => {

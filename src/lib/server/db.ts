@@ -75,14 +75,24 @@ if (userColumns.some((c) => c.name === 'password_hash'))
 	db.exec('ALTER TABLE users DROP COLUMN password_hash');
 
 const DEFAULT_SETTINGS: Record<string, string> = {
-	// First match: Mexico City, 11 June 2026. Auction closes one hour before kickoff.
+	// First match: Mexico City, 11 June 2026.
 	kickoff: '2026-06-12T02:00:00Z',
 	min_opening_bid: '10',
-	// Staggered close: one lot hammered every `stagger_minutes`, the last one
-	// `close_margin_minutes` before kickoff of the first match.
-	stagger_minutes: '5',
-	close_margin_minutes: '120'
+	// Staggered close: the first lot is hammered `first_hammer_lead_minutes`
+	// before kickoff of the first match, then one every `stagger_minutes` —
+	// 48 lots a minute apart run from an hour out to 13 minutes before kickoff.
+	stagger_minutes: '1',
+	first_hammer_lead_minutes: '60'
 };
+
+// v3: the schedule anchor moved from the last hammer (close_margin_minutes
+// before kickoff) to the first (first_hammer_lead_minutes before kickoff).
+// The old 5-minute stagger would push the last hammer past kickoff, so it
+// tightens to the new default alongside.
+if (db.prepare("SELECT 1 FROM settings WHERE key = 'close_margin_minutes'").get()) {
+	db.prepare("DELETE FROM settings WHERE key = 'close_margin_minutes'").run();
+	db.prepare("UPDATE settings SET value = '1' WHERE key = 'stagger_minutes'").run();
+}
 
 const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
 for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) insertSetting.run(key, value);

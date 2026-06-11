@@ -22,11 +22,11 @@
 	<label for="kickoff">First match kickoff (UTC ISO — set automatically by the feed sync)</label>
 	<input id="kickoff" name="kickoff" value={data.kickoff} required />
 
+	<label for="first_hammer_lead_minutes">First hammer, minutes before kickoff</label>
+	<input id="first_hammer_lead_minutes" name="first_hammer_lead_minutes" type="number" min="1" value={data.firstHammerLeadMinutes} required />
+
 	<label for="stagger_minutes">Minutes between hammers (lots close one at a time)</label>
 	<input id="stagger_minutes" name="stagger_minutes" type="number" min="1" value={data.staggerMinutes} required />
-
-	<label for="close_margin_minutes">Final hammer, minutes before kickoff</label>
-	<input id="close_margin_minutes" name="close_margin_minutes" type="number" min="1" value={data.closeMarginMinutes} required />
 
 	<label for="min_opening_bid">Minimum opening bid</label>
 	<input id="min_opening_bid" name="min_opening_bid" type="number" min="1" value={data.minOpeningBid} required />

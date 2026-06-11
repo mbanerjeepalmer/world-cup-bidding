@@ -17,12 +17,13 @@
 	<li>There is no budget — bid whatever you like. But remember the scoring: every BonBon you pay
 		divides your points at the end. Win the lot too dearly and you lose the game.</li>
 	<li>Lots are hammered <strong>one at a time</strong>, in running order — Group A first,
-		alphabetically within each group, {data.staggerMinutes} minutes apart. Each lot's hammer
-		time is shown in the sale.</li>
-	<li>The final lot closes <strong>{data.closeMarginMinutes} minutes before kickoff of the first
-		match</strong> ({new Date(data.auctionClose).toLocaleString()} your time). Whoever holds the
-		high bid when a lot's hammer falls owns that team at that price — and their auction is
-		over.</li>
+		alphabetically within each group, {data.staggerMinutes}
+		{data.staggerMinutes === 1 ? 'minute' : 'minutes'} apart. Each lot's hammer time is shown
+		in the sale.</li>
+	<li>The first lot closes <strong>{data.firstHammerLeadMinutes} minutes before kickoff of the
+		first match</strong> ({new Date(data.firstHammer).toLocaleString()} your time); the last
+		falls at {new Date(data.auctionClose).toLocaleString()}. Whoever holds the high bid when a
+		lot's hammer falls owns that team at that price — and their auction is over.</li>
 	<li>Teams with no bids go unsold and score for nobody.</li>
 </ul>
 

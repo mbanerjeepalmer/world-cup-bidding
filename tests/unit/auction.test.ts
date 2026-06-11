@@ -38,33 +38,33 @@ describe('minimumNextBid', () => {
 });
 
 describe('scheduleCloseTimes — the staggered running order', () => {
-	const lastHammer = new Date('2026-06-11T17:00:00Z'); // two hours before kickoff
+	const firstHammer = new Date('2026-06-11T18:00:00Z'); // an hour before kickoff
 
-	it('hammers lots in group order, alphabetically within a group, ending at the last hammer', () => {
+	it('hammers lots in group order, alphabetically within a group, starting at the first hammer', () => {
 		const lots = [
 			{ id: 1, group_name: 'B', name: 'Brazil' },
 			{ id: 2, group_name: 'A', name: 'Mexico' },
 			{ id: 3, group_name: 'A', name: 'Algeria' }
 		];
-		const schedule = scheduleCloseTimes(lots, lastHammer, 5);
+		const schedule = scheduleCloseTimes(lots, firstHammer, 5);
 		// Running order: Algeria (A), Mexico (A), Brazil (B).
-		expect(schedule.get(3)?.toISOString()).toBe('2026-06-11T16:50:00.000Z');
-		expect(schedule.get(2)?.toISOString()).toBe('2026-06-11T16:55:00.000Z');
-		expect(schedule.get(1)?.toISOString()).toBe('2026-06-11T17:00:00.000Z');
+		expect(schedule.get(3)?.toISOString()).toBe('2026-06-11T18:00:00.000Z');
+		expect(schedule.get(2)?.toISOString()).toBe('2026-06-11T18:05:00.000Z');
+		expect(schedule.get(1)?.toISOString()).toBe('2026-06-11T18:10:00.000Z');
 	});
 
-	it('a single lot closes exactly at the last hammer', () => {
-		const schedule = scheduleCloseTimes([{ id: 1, group_name: 'A', name: 'X' }], lastHammer, 5);
-		expect(schedule.get(1)?.getTime()).toBe(lastHammer.getTime());
+	it('a single lot closes exactly at the first hammer', () => {
+		const schedule = scheduleCloseTimes([{ id: 1, group_name: 'A', name: 'X' }], firstHammer, 5);
+		expect(schedule.get(1)?.getTime()).toBe(firstHammer.getTime());
 	});
 
-	it('48 lots at 5-minute spacing open the session 235 minutes before the last hammer', () => {
+	it('48 lots a minute apart close the last lot 47 minutes after the first hammer', () => {
 		const lots = Array.from({ length: 48 }, (_, i) => ({
 			id: i,
 			group_name: 'A',
 			name: `Team ${String(i).padStart(2, '0')}`
 		}));
-		const schedule = scheduleCloseTimes(lots, lastHammer, 5);
-		expect(schedule.get(0)?.getTime()).toBe(lastHammer.getTime() - 47 * 5 * 60_000);
+		const schedule = scheduleCloseTimes(lots, firstHammer, 1);
+		expect(schedule.get(47)?.getTime()).toBe(firstHammer.getTime() + 47 * 60_000);
 	});
 });

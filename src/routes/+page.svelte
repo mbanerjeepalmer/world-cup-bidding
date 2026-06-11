@@ -20,6 +20,9 @@
 		const sec = s % 60;
 		return `${d}d ${h}h ${m}m ${sec}s`;
 	}
+
+	const closesAt = (iso: string) =>
+		new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 </script>
 
 <h1>The World Cup, going once…</h1>
@@ -28,10 +31,13 @@
 	{#if data.auctionOpen && data.nextHammer}
 		<span class="muted">Next hammer: {data.nextHammer.flag} {data.nextHammer.name} in</span>
 		<strong>{countdown(remaining)}</strong>
-		<span class="muted">
-			— lots close one at a time until {new Date(data.auctionClose).toLocaleString()}{#if data.user},
-				and {data.unsoldCount} of {data.teamCount} still have no bid{/if}.
-		</span>
+		{#if data.lastHammer}
+			<span class="muted">
+				— last lot: {data.lastHammer.flag}
+				{data.lastHammer.name}, {closesAt(data.lastHammer.closeAt)}{#if data.user}
+					· {data.unsoldCount} of {data.teamCount} still have no bid{/if}.
+			</span>
+		{/if}
 	{:else}
 		<strong>The hammer has fallen.</strong>
 		<span class="muted">Scores now follow the tournament. Good luck.</span>
@@ -80,10 +86,7 @@
 		</table>
 	{/if}
 {:else}
-	<p>
-		Forty-eight teams go under the hammer, priced in BonBons. Your score is your team's
-		tournament points divided by what you paid. Winning cheap beats winning big.
-	</p>
+	<p>Forty-eight teams under the hammer, priced in BonBons. Winning cheap beats winning big.</p>
 
 	<h2>How it works</h2>
 	<div class="panel how">
@@ -119,10 +122,7 @@
 		</div>
 	</div>
 
-	<p>
-		Each email domain is its own saleroom, so register with your work email — you bid against
-		your colleagues and nobody else.
-	</p>
+	<p>Your email domain is your saleroom — use your work address to play your colleagues.</p>
 
 	<p>
 		<a class="button" href="/register">Register for a paddle</a>

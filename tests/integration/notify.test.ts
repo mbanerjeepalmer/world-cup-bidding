@@ -23,8 +23,8 @@ describe('notifyHammeredLots', () => {
 		const brazil = makeTeam('Brazil');
 		placeBid(brazil, alice, 10);
 
-		// Hammer falls just now: kickoff is close_margin (120m) from now.
-		setSetting('kickoff', new Date(Date.now() + 120 * 60_000).toISOString());
+		// Hammer falls just now: kickoff is first_hammer_lead (60m) from now.
+		setSetting('kickoff', new Date(Date.now() + 60 * 60_000).toISOString());
 
 		await notifyHammeredLots('http://test');
 		expect(sentKeys()).toEqual([`lot_won:example.com:${brazil}`]);

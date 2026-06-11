@@ -4,8 +4,8 @@ A World Cup bidding game for colleagues. Every team at the 2026 World Cup
 is a lot in an open auction, paid for in BonBons — **one team per bidder**, and no
 budget: every BonBon you pay divides your points, so overbidding is its own
 punishment. Each team earns tournament points for its results; your score is
-**points ÷ price paid**. Lots are hammered one at a time in running order, the
-final lot two hours before kickoff of the first match.
+**points ÷ price paid**. Lots are hammered one at a time in running order,
+starting an hour before kickoff of the first match.
 
 Full rules are on the `/rules` page in the app.
 
