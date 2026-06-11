@@ -2,8 +2,16 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/state';
+	import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
 
 	let { data, children } = $props();
+
+	// Windows' emoji font draws 🇧🇷 as the letters BR. Where flags don't render,
+	// this loads a small flag-only font (self-hosted; the font stacks in
+	// app.css list it first). Everywhere else it's a no-op.
+	$effect(() => {
+		polyfillCountryFlagEmojis('Twemoji Country Flags', '/fonts/TwemojiCountryFlags.woff2');
+	});
 
 	const links = [
 		{ href: '/teams', label: 'The Sale' },

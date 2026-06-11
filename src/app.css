@@ -10,8 +10,11 @@
 	--text-muted: #9a968c;
 	--danger: #ff5c5c;
 	--green: #5cd97c;
-	--serif: 'Didot', 'Bodoni MT', 'Playfair Display', 'Georgia', serif;
-	--sans: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+	/* 'Twemoji Country Flags' is a flag-only web font the layout loads where
+	   the platform can't draw flag emojis (Windows) — elsewhere the name
+	   resolves to nothing and the stack falls through. */
+	--serif: 'Twemoji Country Flags', 'Didot', 'Bodoni MT', 'Playfair Display', 'Georgia', serif;
+	--sans: 'Twemoji Country Flags', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
 }
 
 * {
