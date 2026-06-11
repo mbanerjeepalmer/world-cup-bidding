@@ -10,7 +10,6 @@
 	const remaining = $derived(
 		new Date(data.nextHammer?.closeAt ?? data.auctionClose).getTime() - now
 	);
-	const lastRemaining = $derived(new Date(data.auctionClose).getTime() - now);
 
 	function countdown(ms: number): string {
 		if (ms <= 0) return 'Hammer down';
@@ -25,22 +24,21 @@
 
 <h1>The World Cup, going once…</h1>
 
-{#if data.user}
-	<div class="panel countdown">
-		{#if data.auctionOpen && data.nextHammer}
-			<span class="muted">Next hammer: {data.nextHammer.flag} {data.nextHammer.name} in</span>
-			<strong>{countdown(remaining)}</strong>
-			<span class="muted">
-				— lots close one at a time, the last two hours before kickoff
-				({new Date(data.auctionClose).toLocaleString()}). {data.unsoldCount} of
-				{data.teamCount} lots still without a bid.
-			</span>
-		{:else}
-			<strong>The hammer has fallen.</strong>
-			<span class="muted">Scores now follow the tournament. Good luck.</span>
-		{/if}
-	</div>
+<div class="panel countdown">
+	{#if data.auctionOpen && data.nextHammer}
+		<span class="muted">Next hammer: {data.nextHammer.flag} {data.nextHammer.name} in</span>
+		<strong>{countdown(remaining)}</strong>
+		<span class="muted">
+			— lots close one at a time until {new Date(data.auctionClose).toLocaleString()}{#if data.user},
+				and {data.unsoldCount} of {data.teamCount} still have no bid{/if}.
+		</span>
+	{:else}
+		<strong>The hammer has fallen.</strong>
+		<span class="muted">Scores now follow the tournament. Good luck.</span>
+	{/if}
+</div>
 
+{#if data.user}
 	<h2>Your lot</h2>
 	{#if data.mine.length === 0}
 		<p class="muted">
@@ -83,77 +81,47 @@
 	{/if}
 {:else}
 	<p>
-		Forty-eight national teams go under the hammer, payable in BonBons. Bid wisely: glory is
-		measured not by what your teams win, but by what they win <em>per BonBon paid</em>. Overpay
-		for Brazil and you will be beaten by whoever picked up Curaçao for loose change.
+		Forty-eight teams go under the hammer, priced in BonBons. Your score is your team's
+		tournament points divided by what you paid. Winning cheap beats winning big.
 	</p>
 
-	{#if data.auctionOpen}
-		<div class="panel countdown">
-			{#if data.nextHammer}
-				<span class="muted">Next hammer in</span>
-				<strong>{countdown(remaining)}</strong>
-			{/if}
-			<span class="muted">— final hammer in</span>
-			<strong>{countdown(lastRemaining)}</strong>
+	<h2>How it works</h2>
+	<div class="panel how">
+		<div class="flow">
+			<div class="step" style="--d: 0s">
+				<span class="icon">🍬</span>
+				<span><strong>Bid</strong><br />BonBons, one team each</span>
+			</div>
+			<span class="arrow" style="--d: 0.1s" aria-hidden="true">→</span>
+			<div class="step" style="--d: 0.15s">
+				<span class="icon gavel">🔨</span>
+				<span><strong>Hammer falls</strong><br />the team is yours</span>
+			</div>
+			<span class="arrow" style="--d: 0.25s" aria-hidden="true">→</span>
+			<div class="step" style="--d: 0.3s">
+				<span class="icon">🏆</span>
+				<span><strong>Score</strong><br />its points ÷ your price</span>
+			</div>
 		</div>
-	{:else}
-		<div class="panel countdown">
-			<strong>The hammer has fallen.</strong>
-			<span class="muted">Scores now follow the tournament.</span>
-		</div>
-	{/if}
 
-	<ol class="steps">
-		<li>
-			<strong>Sign in and bid.</strong> Register a paddle with just your email — we send you a
-			sign-in link, no password — then bid BonBons on the team you want.
-		</li>
-		<li>
-			<strong>One team per bidder.</strong> You can lead only one lot at a time; when the hammer
-			falls on a lot you lead, that team is yours and your auction is over. Lots close one at a
-			time, the final one two hours before the opening kickoff.
-		</li>
-		<li>
-			<strong>Points ÷ price.</strong> Your team earns points for its tournament results, and
-			your score is those points divided by the BonBons you paid. The cheaper the glory, the
-			higher you rank.
-		</li>
-	</ol>
-
-	<h2>Two worked examples</h2>
-	<div class="examples">
-		<div class="panel example">
-			<h3>Priya pays top BonBon</h3>
-			<p>
-				Priya wins Brazil for <strong class="bonbons">500</strong> BonBons. Brazil tops its
-				group and wins the whole tournament — <strong>25 points</strong>, the most any team can
-				score.
-			</p>
-			<p class="math">25 points ÷ 500 BonBons = <strong>0.05</strong></p>
-		</div>
-		<div class="panel example">
-			<h3>Sam buys a bargain</h3>
-			<p>
-				Sam picks up Curaçao for <strong class="bonbons">10</strong> BonBons. They top their
-				group, then go out in the round of 16 — a modest <strong>5 points</strong>.
-			</p>
-			<p class="math">5 points ÷ 10 BonBons = <strong>0.5</strong></p>
+		<div class="proof">
+			<div class="lot">
+				<span>🇧🇷 Brazil, champions</span>
+				<span class="math">25 pts ÷ 500 🍬 = <strong>0.05</strong></span>
+				<span class="bar dim" style="--w: 10%; --d: 0.5s"></span>
+			</div>
+			<div class="lot">
+				<span>🇨🇼 Curaçao, out in the round of 16</span>
+				<span class="math">5 pts ÷ 10 🍬 = <strong>0.50</strong></span>
+				<span class="bar" style="--w: 100%; --d: 0.65s"></span>
+			</div>
+			<p class="muted">The bargain beats the champion, ten to one.</p>
 		</div>
 	</div>
-	<p>
-		Sam scores <strong>ten times</strong> what Priya does. Glory is points <em>per BonBon</em>:
-		a cheap team that does respectably beats an expensive team that wins it all.
-	</p>
 
-	<h2>Who you bid against</h2>
 	<p>
-		Everyone who registers with the same email domain — the part after the <code>@</code> —
-		shares one private saleroom. Sign up as <code>priya@acme.com</code> and you bid only against
-		other <code>@acme.com</code> addresses: their bids set your prices, and your leaderboard
-		shows only them. People on <code>gmail.com</code> run a completely separate auction over the
-		same 48 teams, at their own prices. So register with your work email to play against your
-		colleagues.
+		Each email domain is its own saleroom, so register with your work email — you bid against
+		your colleagues and nobody else.
 	</p>
 
 	<p>
@@ -177,46 +145,126 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	.steps {
-		padding-left: 1.25rem;
+	.how {
+		display: grid;
+		gap: 1.5rem;
 	}
 
-	.steps li {
-		margin: 0.75rem 0;
+	.flow {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		flex-wrap: wrap;
 	}
 
-	.steps strong {
+	.step {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		line-height: 1.3;
+		animation: rise 0.35s ease-out both;
+		animation-delay: var(--d);
+	}
+
+	.step strong {
 		color: var(--yellow);
 	}
 
-	.examples {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-		gap: 1rem;
+	.icon {
+		font-size: 1.6rem;
 	}
 
-	.example h3 {
-		margin: 0 0 0.5rem;
+	.gavel {
+		display: inline-block;
+		transform-origin: 70% 80%;
+		animation: tap 5s ease-in-out 1.2s infinite;
+	}
+
+	/* One gentle tap of the gavel every five seconds. */
+	@keyframes tap {
+		0%,
+		86%,
+		100% {
+			transform: rotate(0);
+		}
+		90% {
+			transform: rotate(-16deg);
+		}
+		95% {
+			transform: rotate(5deg);
+		}
+	}
+
+	.arrow {
+		display: inline-block;
+		color: var(--text-muted);
+		animation: rise 0.35s ease-out both;
+		animation-delay: var(--d);
+	}
+
+	.proof {
+		display: grid;
+		gap: 0.75rem;
+		border-top: 1px solid var(--border);
+		padding-top: 1.25rem;
+	}
+
+	.proof .muted {
+		margin: 0;
+	}
+
+	.lot {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 0.15rem 1rem;
+	}
+
+	.math {
+		font-variant-numeric: tabular-nums;
+		color: var(--text-muted);
+	}
+
+	.math strong {
+		color: var(--yellow);
 		font-size: 1.1rem;
 	}
 
-	.example .math {
-		margin: 0;
-		padding-top: 0.75rem;
-		border-top: 1px solid var(--border);
-		font-variant-numeric: tabular-nums;
-	}
-
-	.example .math strong {
-		color: var(--yellow);
-		font-size: 1.2rem;
-	}
-
-	code {
-		background: var(--panel-raised);
-		border: 1px solid var(--border);
+	.bar {
+		grid-column: 1 / -1;
+		height: 6px;
+		width: var(--w);
 		border-radius: 3px;
-		padding: 0.05rem 0.35rem;
-		font-size: 0.9em;
+		background: var(--yellow);
+		transform-origin: left;
+		animation: grow 0.9s ease-out both;
+		animation-delay: var(--d);
+	}
+
+	.bar.dim {
+		background: var(--yellow-dim);
+	}
+
+	@keyframes grow {
+		from {
+			transform: scaleX(0);
+		}
+	}
+
+	@media (max-width: 560px) {
+		.flow {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.arrow {
+			margin-left: 0.45rem;
+			/* The rise animation ends on `transform: none` and holds it, so the
+			   turn must ride the separate rotate property. */
+			rotate: 90deg;
+		}
+
+		.lot {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>
